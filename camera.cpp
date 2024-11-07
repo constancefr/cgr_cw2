@@ -9,12 +9,9 @@ Camera::Camera(int imageWidth, int imageHeight, float fieldOfView)
 }
 
 void Camera::getRayDirection(float u, float v, float& x, float& y, float& z) const {
-    // To prevent stretching ?
-    // x = (2 * u - 1) * aspectRatio * scale;
-    // y = (1 - 2 * v) * aspectRatio * scale;
-
     // Map (u, v) to normalized device coordinates [-1, 1]
-    x = (2 * u - 1) * scale;
+    x = (2 * u - 1) * aspectRatio * scale; // aspectRatio to correct stretching
     y = (1 - 2 * v) * scale;
     z = -1; // Points into the scene
+
 }
