@@ -1,32 +1,32 @@
-#ifndef VECTOR3_H
-#define VECTOR3_H
+#ifndef vector3_H
+#define vector3_H
+
 #include <cmath>
+#include <iostream>
 
-class Vector3 {
+class vector3 {
 public:
-    float x, y, z;
+    double x, y, z;
 
-    Vector3() : x(0), y(0), z(0) {}
-    Vector3(float x, float y, float z) : x(x), y(y), z(z) {}
+    vector3() : x(0), y(0), z(0) {}
+    vector3(double x, double y, double z) : x(x), y(y), z(z) {}
 
-    // Vector subtraction
-    Vector3 operator-(const Vector3& other) const {
-        return Vector3(x - other.x, y - other.y, z - other.z);
-    }
+    // Basic operations
+    vector3 operator+(const vector3& v) const { return vector3(x + v.x, y + v.y, z + v.z); }
+    vector3 operator-(const vector3& v) const { return vector3(x - v.x, y - v.y, z - v.z); }
+    vector3 operator*(double scalar) const { return vector3(x * scalar, y * scalar, z * scalar); }
+    vector3 operator/(double scalar) const { return *this * (1 / scalar); }
 
-    // Dot product
-    float dot(const Vector3& other) const {
-        return x * other.x + y * other.y + z * other.z;
-    }
+    // Dot and cross product
+    double dot(const vector3& v) const { return x * v.x + y * v.y + z * v.z; }
+    vector3 cross(const vector3& v) const { return vector3(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x); }
 
-    // Scalar multiplication
-    Vector3 operator*(float scalar) const {
-        return Vector3(x * scalar, y * scalar, z * scalar);
-    }
+    // Utility
+    double length() const { return std::sqrt(x * x + y * y + z * z); }
+    vector3 unit() const { return *this / length(); }
 
-    Vector3 normalize() const {
-    float len = sqrt(x * x + y * y + z * z);
-    return Vector3(x / len, y / len, z / len);
+    friend std::ostream& operator<<(std::ostream& os, const vector3& v) {
+        return os << v.x << " " << v.y << " " << v.z;
     }
 };
 
