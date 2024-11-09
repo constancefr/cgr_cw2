@@ -2,6 +2,14 @@
 #include "vector3.h"
 #include "colour.h"
 #include "ray.h"
+#include "camera.h"
+
+// Normalize pixel coordinates
+std::pair<double, double> normalize_pixel(int i, int j, int image_width, int image_height) {
+    double u = double(i) / (image_width - 1);  // Horizontal coordinate (0.0 to 1.0)
+    double v = double(j) / (image_height - 1); // Vertical coordinate (0.0 to 1.0)
+    return {u, v};
+}
 
 vector3 ray_colour(const ray& r) {
     vector3 unit_dir = r.direction.unit();
@@ -16,35 +24,16 @@ int main() {
     const int image_height = static_cast<int>(image_width / aspect_ratio);
 
     // Camera
-    double viewport_height = 2.0;
-    double viewport_width = aspect_ratio * (image_width / image_height);
-    double focal_length = 1.0;
-
-    vector3 origin(0, 0, 0);
-    vector3 horizontal(viewport_width, 0, 0);
-    vector3 vertical(0, -viewport_height, 0);
-    vector3 upper_left_corner = origin - horizontal / 2 - vertical / 2 - vector3(0, 0, focal_length);
+    Camera camera(aspect_ratio, 2.0, 1.0);
 
     // Render
     std::cout << "P3\n" << image_width << " " << image_height << "\n255\n";
-
-    for (int j = image_height - 1; j >= 0; --j) {
+    for (int j = 0; j < image_height; ++j) {
         for (int i = 0; i < image_width; ++i) {
-            double u = double(i) / (image_width - 1);
-            double v = double(j) / (image_height - 1);
-            ray r(origin, lower_left_corner + horizontal * u + vertical * v - origin);
+            auto [u, v] = normalize_pixel(i, j, image_width, image_height);
+            ray r = camera.get_ray(u, v);
             vector3 colour = ray_colour(r);
             write_colour(std::cout, colour);
-        
-            // Track progress
-            int currentPixel = j * width + i + 1;  // Current pixel number
-            float progress = static_cast<float>(currentPixel) / totalPixels * 100;
-            // Print progress every 5% or on the last pixel
-            if (currentPixel % (totalPixels / 20) == 0 || currentPixel == totalPixels) {
-                std::cout << "\rProgress: " << std::fixed << std::setprecision(1)
-                          << progress << "%";
-                std::cout.flush();  // Ensure the output is updated in real-time
-            }
         }
     }
 
