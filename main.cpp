@@ -6,6 +6,8 @@
 #include "ray.h"
 #include "camera.h"
 #include "scene.h"
+#include "sphere.h"
+#include "triangle.h"
 
 using json = nlohmann::json;
 

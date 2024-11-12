@@ -3,6 +3,7 @@
 
 #include "shape.h"
 #include "ray.h"
+#include "vector3.h"
 
 class Triangle : public Shape {
 public:
