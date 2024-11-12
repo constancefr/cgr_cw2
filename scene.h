@@ -6,6 +6,7 @@
 #include "vector3.h"
 #include "ray.h"
 #include "shape.h"
+#include "triangle.h"
 
 class Scene {
 public:
@@ -18,11 +19,11 @@ public:
         shapes.push_back(shape);
     }
 
-    // Returns true if the ray hits any object
+    // Returns true if ray hits any object
     bool intersects(const ray& r, double& t_hit) const {
         bool hit = false;
         double closest_t = std::numeric_limits<double>::max();
-        for (const auto& shape : shapes) {            
+        for (const auto& shape : shapes) {
             double t = 0;
             if (shape->intersects(r, t) && t < closest_t) {
                 closest_t = t;

@@ -39,6 +39,8 @@ int main(int argc, char* argv[]) {
     auto camera_json = config["camera"];
     auto scene_json = config["scene"];
 
+    std::cerr << "Debug test\n";
+
     // Parse camera
     Camera camera(
         camera_json["width"],
@@ -60,6 +62,13 @@ int main(int argc, char* argv[]) {
                 shape["radius"]
             );
             scene.add_shape(sphere);
+        } else if (shape["type"] == "triangle") {
+            auto triangle = std::make_shared<Triangle>(
+                vector3(shape["v0"][0], shape["v0"][1], shape["v0"][2]),
+                vector3(shape["v1"][0], shape["v1"][1], shape["v1"][2]),
+                vector3(shape["v2"][0], shape["v2"][1], shape["v2"][2])
+            );
+            scene.add_shape(triangle);
         }
     }
 
