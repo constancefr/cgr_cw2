@@ -26,7 +26,7 @@ json load_json(const std::string& filename) {
 // Normalize pixel coordinates
 std::pair<double, double> normalize_pixel(int i, int j, int image_width, int image_height) {
     double u = double(i) / (image_width - 1);  // Horizontal coordinate (0.0 to 1.0)
-    double v = 1.0 - double(j) / (image_height - 1); // Vertical coordinate (0.0 to 1.0)
+    double v = double(j) / (image_height - 1); // Vertical coordinate (0.0 to 1.0)
     return {u, v};
 }
 

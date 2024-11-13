@@ -25,7 +25,9 @@ public:
 
         horizontal = right * viewport_width; // vector with direction = right and scale = viewport_width 
         vertical = up * viewport_height;
-        upper_left_corner = origin - horizontal / 2 + vertical / 2 - forward;
+        upper_left_corner = origin + forward - horizontal / 2 + vertical / 2;
+        // upper_left_corner = origin - horizontal / 2 + vertical / 2 - forward; // add forward rather than subtract???
+
     }
 
     ray get_ray(double u, double v) const {

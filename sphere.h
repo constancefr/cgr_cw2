@@ -23,8 +23,8 @@ public:
 
         if (discriminant > 0) {
             t_hit = (-b - sqrt(discriminant)) / (2.0 * a);
-            // return t_hit > 0;
-            return true;
+            return t_hit > 0;
+            // return true;
         }
         return false;
     }

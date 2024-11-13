@@ -38,7 +38,7 @@ public:
         // Find the nearest valid intersection
         double t_cylinder = t0;
         if (t_cylinder < 0) t_cylinder = t1; // Use t1 if t0 is behind
-        // if (t_cylinder < 0) return false;   // No valid intersection
+        if (t_cylinder < 0) return false;   // No valid intersection
 
         // Check height bounds
         double y = (o + d * t_cylinder - center).dot(axis);
