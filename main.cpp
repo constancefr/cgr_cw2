@@ -8,6 +8,7 @@
 #include "scene.h"
 #include "sphere.h"
 #include "triangle.h"
+#include "cylinder.h"
 
 using json = nlohmann::json;
 
@@ -71,6 +72,14 @@ int main(int argc, char* argv[]) {
                 vector3(shape["v2"][0], shape["v2"][1], shape["v2"][2])
             );
             scene.add_shape(triangle);
+        } else if (shape["type"] == "cylinder") {  // Add support for cylinders
+            auto cylinder = std::make_shared<Cylinder>(
+                vector3(shape["center"][0], shape["center"][1], shape["center"][2]),
+                vector3(shape["axis"][0], shape["axis"][1], shape["axis"][2]),
+                shape["radius"],
+                shape["height"]
+            );
+            scene.add_shape(cylinder);
         }
     }
 
