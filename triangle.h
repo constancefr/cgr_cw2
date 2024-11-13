@@ -40,7 +40,8 @@ public:
 
         // At this point, we have a valid intersection
         t_hit = f * edge2.dot(q);
-        return t_hit > 1e-8; // Ray intersects the triangle
+        // return t_hit > 1e-8; // Ray intersects the triangle
+        return true;
     }
 };
 
