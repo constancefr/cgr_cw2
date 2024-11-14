@@ -20,13 +20,14 @@ public:
         double viewport_width = aspect_ratio * viewport_height;
 
         vector3 forward = (lookAt - position).unit(); // unit vect pointing in viewing direction of camera (negative z-axis here) 
-        vector3 right = forward.cross(upVector.unit()); // orthog to forward & up
-        vector3 up = right.cross(forward); // orthog to forward & right
+        // vector3 right = forward.cross(upVector.unit()); // orthog to forward & up
+        vector3 right = upVector.unit().cross(forward); // Correct orientation? Goes towards left...
+        // vector3 up = right.cross(forward); // orthog to forward & right
+        vector3 up = forward.cross(right);
 
-        horizontal = right * viewport_width; // vector with direction = right and scale = viewport_width 
-        vertical = up * viewport_height;
+        horizontal = right.unit() * viewport_width; // vector with direction = right and scale = viewport_width 
+        vertical = up.unit() * viewport_height;
         upper_left_corner = origin + forward - horizontal / 2 + vertical / 2;
-        // upper_left_corner = origin - horizontal / 2 + vertical / 2 - forward; // add forward rather than subtract???
 
     }
 

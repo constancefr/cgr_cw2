@@ -95,7 +95,8 @@ int main(int argc, char* argv[]) {
     std::cout << "PPM file header: \n" << "P3\n" << image_width << " " << image_height << "\n255\n";
     
     for (int j = 0; j < image_height; ++j) {
-        for (int i = 0; i < image_width; ++i) {
+    // for (int j = image_height - 1; j >= 0; --j) { // from top to bottom?
+        for (int i = 0; i < image_width; ++i) {// from left to right
             auto [u, v] = normalize_pixel(i, j, image_width, image_height);
             ray r = camera.get_ray(u, v);
 
