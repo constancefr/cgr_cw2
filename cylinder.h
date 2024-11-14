@@ -16,6 +16,19 @@ public:
     Cylinder(const vector3& c, const vector3& a, double r, double h, const Material& m) 
         : Shape(m), center(c), axis(a.unit()), radius(r), height(h) {}
 
+    vector3 get_normal(const vector3& point) const {
+        // Check if the point is on the top or bottom cap
+        if (std::abs((point - center).dot(axis.unit())) < 1e-6) {
+            return -axis.unit(); // Bottom cap
+        } else if (std::abs((point - (center + height * axis.unit())).dot(axis.unit())) < 1e-6) {
+            return axis.unit(); // Top cap
+        }
+
+        // Otherwise, the point is on the curved surface
+        vector3 axis_point = center + (point - center).dot(axis.unit()) * axis.unit();
+        return (point - axis_point).unit();
+    }
+
     bool intersects(const ray& r, double& t_hit) const override {
         vector3 d = r.direction;
         vector3 o = r.origin;

@@ -31,6 +31,10 @@ public:
 
         return true;
     }
+
+    vector3 get_normal(const vector3& point) const {
+        return (point - center).unit();
+    }
 };
 
 #endif

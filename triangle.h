@@ -7,10 +7,20 @@
 
 class Triangle : public Shape {
 public:
-    vector3 v0, v1, v2;
+    vector3 v0, v1, v2;  // Vertices of the triangle
+    vector3 normal;      // Precomputed normal vector
 
-    Triangle(const vector3& v0, const vector3& v1, const vector3& v2, const Material& m) 
-        : Shape(m), v0(v0), v1(v1), v2(v2) {}
+    Triangle(const vector3& v0, const vector3& v1, const vector3& v2, const Material& mat)
+        : Shape(mat), v0(v0), v1(v1), v2(v2) {
+        // Calculate the normal when the triangle is created
+        vector3 edge1 = v1 - v0;
+        vector3 edge2 = v2 - v0;
+        normal = edge1.cross(edge2).unit(); // Cross product of two edges, normalized
+    }
+
+    vector3 get_normal(const vector3& point) const {
+        return normal; // Precomputed during initialization
+    }
 
     // Möller–Trumbore ray-triangle intersection algorithm
     bool intersects(const ray& r, double& t_hit) const override {
@@ -43,6 +53,7 @@ public:
         return t_hit > 1e-8; // Ray intersects the triangle
         // return true;
     }
+
 };
 
 #endif

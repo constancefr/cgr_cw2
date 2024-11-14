@@ -10,15 +10,25 @@
 #include "triangle.h"
 #include "libs/json.hpp"
 
+struct Light {
+    vector3 position;
+    vector3 intensity;
+};
+
 class Scene {
 public:
     vector3 backgroundcolor;
     std::vector<std::shared_ptr<Shape>> shapes;
+    std::vector<Light> lights;
 
     Scene(const vector3& background_color) : backgroundcolor(background_color) {}
 
     void add_shape(const std::shared_ptr<Shape>& shape) {
         shapes.push_back(shape);
+    }
+
+    void add_light(const Light& light) {
+        lights.push_back(light);
     }
 
     // Returns true if ray hits any object

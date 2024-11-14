@@ -28,6 +28,8 @@ public:
     // Pure virtual method to check for intersection with the ray
     virtual bool intersects(const ray& r, double& t_hit) const = 0;
 
+    virtual vector3 get_normal(const vector3& point) const = 0;
+
     // Virtual destructor to allow proper cleanup of derived classes
     virtual ~Shape() {}
 };
