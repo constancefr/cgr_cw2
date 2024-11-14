@@ -55,33 +55,8 @@ int main(int argc, char* argv[]) {
     );
 
     // Parse scene
-    Scene scene(vector3(scene_json["backgroundcolor"][0], scene_json["backgroundcolor"][1], scene_json["backgroundcolor"][2]));
-
-    // Add shapes to scene
-    for (const auto& shape : scene_json["shapes"]) {
-        if (shape["type"] == "sphere") {
-            auto sphere = std::make_shared<Sphere>(
-                vector3(shape["center"][0], shape["center"][1], shape["center"][2]),
-                shape["radius"]
-            );
-            scene.add_shape(sphere);
-        } else if (shape["type"] == "triangle") {
-            auto triangle = std::make_shared<Triangle>(
-                vector3(shape["v0"][0], shape["v0"][1], shape["v0"][2]),
-                vector3(shape["v1"][0], shape["v1"][1], shape["v1"][2]),
-                vector3(shape["v2"][0], shape["v2"][1], shape["v2"][2])
-            );
-            scene.add_shape(triangle);
-        } else if (shape["type"] == "cylinder") {  // Add support for cylinders
-            auto cylinder = std::make_shared<Cylinder>(
-                vector3(shape["center"][0], shape["center"][1], shape["center"][2]),
-                vector3(shape["axis"][0], shape["axis"][1], shape["axis"][2]),
-                shape["radius"],
-                shape["height"]
-            );
-            scene.add_shape(cylinder);
-        }
-    }
+    Scene scene(vector3(0, 0, 0));  // Initialize with a default color
+    scene.load_from_json(scene_json);
 
     // Render binary image
     const int image_width = camera_json["width"];
@@ -101,12 +76,14 @@ int main(int argc, char* argv[]) {
             ray r = camera.get_ray(u, v);
 
             double t_hit;
-            if (scene.intersects(r, t_hit)) {
-                // Hit: Red pixel
-                write_colour(outfile, vector3(1.0, 0.0, 0.0));
+            std::shared_ptr<Shape> hit_shape;
+
+            if (scene.intersects(r, t_hit, hit_shape)) {
+                // Use the material's diffuse color for now
+                write_colour(outfile, hit_shape->material.diffusecolor);
             } else {
-                // Miss: Blue pixel
-                write_colour(outfile, vector3(0.0, 0.0, 1.0));
+                // Use the scene's background color
+                write_colour(outfile, scene.backgroundcolor);
             }
         }
     }

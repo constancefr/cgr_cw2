@@ -9,8 +9,8 @@ class Triangle : public Shape {
 public:
     vector3 v0, v1, v2;
 
-    Triangle(const vector3& vertex0, const vector3& vertex1, const vector3& vertex2)
-        : v0(vertex0), v1(vertex1), v2(vertex2) {}
+    Triangle(const vector3& v0, const vector3& v1, const vector3& v2, const Material& m) 
+        : Shape(m), v0(v0), v1(v1), v2(v2) {}
 
     // Möller–Trumbore ray-triangle intersection algorithm
     bool intersects(const ray& r, double& t_hit) const override {

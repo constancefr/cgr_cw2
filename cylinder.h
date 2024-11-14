@@ -10,11 +10,11 @@ class Cylinder : public Shape {
 public:
     vector3 center;      // Base center
     vector3 axis;        // Unit vector along axis
-    double radius;       // Radius
-    double height;       // Height (if finite)
+    double radius;
+    double height;
 
-    Cylinder(const vector3& c, const vector3& a, double r, double h) 
-        : center(c), axis(a.unit()), radius(r), height(h) {}
+    Cylinder(const vector3& c, const vector3& a, double r, double h, const Material& m) 
+        : Shape(m), center(c), axis(a.unit()), radius(r), height(h) {}
 
     bool intersects(const ray& r, double& t_hit) const override {
         vector3 d = r.direction;
