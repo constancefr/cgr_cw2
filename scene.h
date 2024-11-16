@@ -23,6 +23,9 @@ public:
 
     Scene(const vector3& background_color) : backgroundcolor(background_color) {}
 
+    // Load scene from JSON configuration
+    void load_from_json(const nlohmann::json& scene_json);
+
     void add_shape(const std::shared_ptr<Shape>& shape) {
         shapes.push_back(shape);
     }
@@ -32,10 +35,10 @@ public:
     }
 
     // Returns true if ray hits any object
-    bool intersects(const ray& r, double& t_hit, std::shared_ptr<Shape>& hit_shape) const;
+    bool intersects(const ray& r, double& t_hit, std::shared_ptr<Shape>& hit_shape, double max_t) const;
 
-    // Load scene from JSON configuration
-    void load_from_json(const nlohmann::json& scene_json);
+    vector3 shade(const ray& r, const vector3& hit_point, const vector3& normal, const Material& material) const;
+
 };
 
 #endif

@@ -109,26 +109,24 @@ int main(int argc, char* argv[]) {
     
     // for (int j = image_height - 1; j >= 0; --j) { // from top to bottom?
     for (int j = 0; j < image_height; ++j) {
-        for (int i = 0; i < image_width; ++i) { // from left to right
+        for (int i = 0; i < image_width; ++i) { // From left to right
             auto [u, v] = normalize_pixel(i, j, image_width, image_height);
             ray r = camera.get_ray(u, v);
 
             double t_hit;
+            double max_t = std::numeric_limits<double>::max(); // No upper bound for primary rays
             std::shared_ptr<Shape> hit_shape;
 
-            if (scene.intersects(r, t_hit, hit_shape)) {
+            // Check for intersections
+            if (scene.intersects(r, t_hit, hit_shape, max_t)) {
                 // Calculate intersection point and normal
                 vector3 hit_point = r.origin + t_hit * r.direction;
-                vector3 normal = hit_shape->get_normal(hit_point); // Implement `get_normal` for each shape
+                vector3 normal = hit_shape->get_normal(hit_point); // Ensure this is implemented per shape
 
-                // View direction (from hit point to camera)
-                vector3 view_dir = -r.direction.unit();
+                // Calculate shading using the Scene::shade method
+                vector3 shaded_color = scene.shade(r, hit_point, normal, hit_shape->material);
 
-                // Compute Blinn-Phong shading
-                vector3 shaded_color = compute_blinn_phong(
-                    hit_point, normal, view_dir, hit_shape->material, scene.lights
-                );
-
+                // Write the shaded color to the image
                 write_colour(outfile, shaded_color);
             } else {
                 // Use the scene's background color
