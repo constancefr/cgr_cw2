@@ -3,6 +3,12 @@
 #include "triangle.h"
 #include "cylinder.h"
 
+// RenderMode parse_render_mode(const std::string& mode_str) {
+//     if (mode_str == "binary") return RenderMode::Binary;
+//     return RenderMode::BlinnPhong;
+//     // throw std::invalid_argument("Unknown render mode: " + mode_str);
+// }
+
 // Helper function to parse materials
 Material parse_material(const nlohmann::json& material_json) {
     Material m;
@@ -158,6 +164,23 @@ vector3 Scene::compute_refracted_direction(
 }
 
 vector3 Scene::shade(
+    const ray& r, 
+    const vector3& hit_point, 
+    const vector3& normal, 
+    const Material& material, 
+    int depth
+) const {
+    switch (render_mode) {
+        // case RenderMode::Binary:
+            // return shade_binary(r, hit_point, normal, material);
+        case RenderMode::BlinnPhong:
+            return shade_blinn_phong(r, hit_point, normal, material, depth);
+        default:
+            throw std::runtime_error("Unsupported render mode.");
+    }
+}
+
+vector3 Scene::shade_blinn_phong(
     const ray& r, 
     const vector3& hit_point, 
     const vector3& normal, 

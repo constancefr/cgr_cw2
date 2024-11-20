@@ -42,10 +42,15 @@ int main(int argc, char* argv[]) {
     }
 
     json config = load_json(argv[1]);
+    // int nbounces = config["nbounces"];
     auto camera_json = config["camera"];
     auto scene_json = config["scene"];
-
-    std::cerr << "Debug test\n";
+    
+    // Parse scene
+    Scene scene(vector3(0, 0, 0));  // Initialize with a default color
+    scene.load_from_json(scene_json);
+    RenderMode rendermode = scene.parse_render_mode(config["rendermode"]);
+    scene.set_render_mode(rendermode);
 
     // Parse camera
     Camera camera(
@@ -57,9 +62,7 @@ int main(int argc, char* argv[]) {
         vector3(camera_json["upVector"][0], camera_json["upVector"][1], camera_json["upVector"][2])
     );
 
-    // Parse scene
-    Scene scene(vector3(0, 0, 0));  // Initialize with a default color
-    scene.load_from_json(scene_json);
+    
 
     // Parse lights
     for (const auto& light : scene_json["lightsources"]) {

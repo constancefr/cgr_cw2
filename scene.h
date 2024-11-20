@@ -15,12 +15,27 @@ struct Light {
     vector3 intensity;
 };
 
-class Scene {
+enum class RenderMode {
+        Binary,
+        BlinnPhong
+};
 
+class Scene {
 public:
+    RenderMode render_mode;
     vector3 backgroundcolor;
     std::vector<std::shared_ptr<Shape>> shapes;
     std::vector<Light> lights;
+
+    RenderMode parse_render_mode(const std::string& mode_str) {
+        if (mode_str == "binary") return RenderMode::Binary;
+        return RenderMode::BlinnPhong;
+        // throw std::invalid_argument("Unknown render mode: " + mode_str);
+    }
+
+    void set_render_mode(RenderMode mode) {
+        render_mode = mode;
+    }
 
     Scene(const vector3& background_color) : backgroundcolor(background_color) {}
 
@@ -35,7 +50,11 @@ public:
         lights.push_back(light);
     }
 
-    // Returns true if ray hits any object
+    vector3 shade(const ray& r, const vector3& hit_point, const vector3& normal, const Material& material, int depth) const;
+
+    vector3 shade_blinn_phong(const ray& r, const vector3& hit_point, const vector3& normal, const Material& material, int depth) const;
+    
+    // Utils
     bool intersects(const ray& r, double& t_hit, std::shared_ptr<Shape>& hit_shape, double max_t) const;
 
     vector3 compute_blinn_phong(
@@ -52,8 +71,6 @@ public:
         const Material& material,
         int depth
     ) const;
-
-    vector3 shade(const ray& r, const vector3& hit_point, const vector3& normal, const Material& material, int depth) const;
 
     vector3 compute_refracted_direction(
         const vector3& incident,

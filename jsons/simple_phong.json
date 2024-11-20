@@ -34,9 +34,9 @@
                             "specularexponent":20, 
                             "diffusecolor":[0.8, 0.5, 0.5],
                             "specularcolor":[1.0,1.0,1.0],
-                            "isreflective":false,
+                            "isreflective":true,
                             "reflectivity":1.0,
-                            "isrefractive":true,
+                            "isrefractive":false,
                             "refractiveindex":1.0 
                         } 
                 },
@@ -53,9 +53,9 @@
                             "specularexponent":20, 
                             "diffusecolor":[0.5, 0.5, 0.8],
                             "specularcolor":[1.0,1.0,1.0],
-                            "isreflective":false,
+                            "isreflective":true,
                             "reflectivity":0.5,
-                            "isrefractive":true,
+                            "isrefractive":false,
                             "refractiveindex":1.0 
                         } 
                 },
