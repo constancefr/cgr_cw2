@@ -15,7 +15,7 @@
 // };
 struct Material {
     double kd, ks, reflectivity, refractiveindex;
-    double transparency = 0.2; // Add transparency
+    double transparency = 0.4; // Add transparency
     double specularexponent;
     vector3 diffusecolor, specularcolor;
     bool isreflective, isrefractive; // Flags to enable reflection/refraction

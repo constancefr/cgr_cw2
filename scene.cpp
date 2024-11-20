@@ -51,6 +51,8 @@ void Scene::load_from_json(const nlohmann::json& scene_json) {
                 vector3(shape_data["center"][0], shape_data["center"][1], shape_data["center"][2]),
                 vector3(shape_data["axis"][0], shape_data["axis"][1], shape_data["axis"][2]),
                 shape_data["radius"],
+                // multiply height by 2 to get the full height of the cylinder
+                // shape_data["height"].get<double>() * 2,
                 shape_data["height"],
                 material
             );
