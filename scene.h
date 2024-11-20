@@ -16,6 +16,7 @@ struct Light {
 };
 
 class Scene {
+
 public:
     vector3 backgroundcolor;
     std::vector<std::shared_ptr<Shape>> shapes;
@@ -37,7 +38,29 @@ public:
     // Returns true if ray hits any object
     bool intersects(const ray& r, double& t_hit, std::shared_ptr<Shape>& hit_shape, double max_t) const;
 
-    vector3 shade(const ray& r, const vector3& hit_point, const vector3& normal, const Material& material) const;
+    vector3 compute_blinn_phong(
+        const vector3& point,
+        const vector3& normal,
+        const vector3& view_dir,
+        const Material& material
+    ) const;
+
+    vector3 compute_reflection(
+        const ray& r,
+        const vector3& hit_point,
+        const vector3& normal,
+        const Material& material,
+        int depth
+    ) const;
+
+    vector3 shade(const ray& r, const vector3& hit_point, const vector3& normal, const Material& material, int depth) const;
+
+    vector3 compute_refracted_direction(
+        const vector3& incident,
+        const vector3& normal,
+        double ior_in,
+        double ior_out
+    ) const;
 
 };
 

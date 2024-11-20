@@ -12,6 +12,8 @@
 
 using json = nlohmann::json;
 
+double max_t = std::numeric_limits<double>::max(); // No upper bound for primary rays
+
 json load_json(const std::string& filename) {
     std::ifstream file(filename);
     if (!file.is_open()) {
@@ -28,35 +30,6 @@ std::pair<double, double> normalize_pixel(int i, int j, int image_width, int ima
     double u = double(i) / (image_width - 1);  // Horizontal coordinate (0.0 to 1.0)
     double v = double(j) / (image_height - 1); // Vertical coordinate (0.0 to 1.0)
     return {u, v};
-}
-
-vector3 compute_blinn_phong(
-    const vector3& point,           // Point on the surface
-    const vector3& normal,          // Surface normal at the point
-    const vector3& view_dir,        // Direction from point to camera
-    const Material& material,       // Material of the surface
-    const std::vector<Light>& lights // Lights in the scene
-) {
-    vector3 color(0.0, 0.0, 0.0);  // Accumulated color
-
-    for (const auto& light : lights) {
-        // Calculate vectors
-        vector3 light_dir = (light.position - point).unit(); // Direction to the light
-        vector3 half_vector = (view_dir + light_dir).unit(); // Halfway vector
-
-        // Diffuse contribution
-        double diff = std::max(0.0, normal.dot(light_dir));
-        vector3 diffuse = material.kd * diff * material.diffusecolor * light.intensity;
-
-        // Specular contribution
-        double spec = std::pow(std::max(0.0, normal.dot(half_vector)), material.specularexponent);
-        vector3 specular = material.ks * spec * material.specularcolor * light.intensity;
-
-        // Accumulate contributions
-        color += diffuse + specular;
-    }
-
-    return color;
 }
 
 
@@ -114,19 +87,14 @@ int main(int argc, char* argv[]) {
             ray r = camera.get_ray(u, v);
 
             double t_hit;
-            double max_t = std::numeric_limits<double>::max(); // No upper bound for primary rays
             std::shared_ptr<Shape> hit_shape;
 
-            // Check for intersections
             if (scene.intersects(r, t_hit, hit_shape, max_t)) {
-                // Calculate intersection point and normal
                 vector3 hit_point = r.origin + t_hit * r.direction;
-                vector3 normal = hit_shape->get_normal(hit_point); // Ensure this is implemented per shape
+                vector3 normal = hit_shape->get_normal(hit_point);
 
-                // Calculate shading using the Scene::shade method
-                vector3 shaded_color = scene.shade(r, hit_point, normal, hit_shape->material);
-
-                // Write the shaded color to the image
+                // Calculate shading
+                vector3 shaded_color = scene.shade(r, hit_point, normal, hit_shape->material, 3);
                 write_colour(outfile, shaded_color);
             } else {
                 // Use the scene's background color
