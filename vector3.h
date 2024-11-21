@@ -13,7 +13,13 @@ public:
 
     // Basic operations
     vector3 operator+(const vector3& v) const { 
-        return vector3(x + v.x, y + v.y, z + v.z); 
+        return vector3(x + v.x, y + v.y, z + v.z);
+    }
+    vector3 operator+(double scalar) const {
+        return vector3(x + scalar, y + scalar, z + scalar);
+    }
+    friend vector3 operator+(double scalar, const vector3& v) {
+        return vector3(v.x + scalar, v.y + scalar, v.z + scalar);
     }
     vector3& operator+=(const vector3& v) {
         x += v.x;
@@ -40,6 +46,12 @@ public:
     vector3 operator/(double scalar) const { 
         return *this * (1 / scalar); 
     }
+    vector3 operator/(const vector3& v) const { // element-wise division
+        return vector3(x / v.x, y / v.y, z / v.z);
+    }
+    vector3 exp() const { // element-wise exponentiation
+        return vector3(std::exp(x), std::exp(y), std::exp(z));
+    }
 
     // Dot and cross product
     double dot(const vector3& v) const { 
@@ -56,7 +68,6 @@ public:
     vector3 unit() const { 
         return *this / length(); 
     }
-
     friend std::ostream& operator<<(std::ostream& os, const vector3& v) {
         return os << v.x << " " << v.y << " " << v.z;
     }

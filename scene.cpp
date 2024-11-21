@@ -3,12 +3,6 @@
 #include "triangle.h"
 #include "cylinder.h"
 
-// RenderMode parse_render_mode(const std::string& mode_str) {
-//     if (mode_str == "binary") return RenderMode::Binary;
-//     return RenderMode::BlinnPhong;
-//     // throw std::invalid_argument("Unknown render mode: " + mode_str);
-// }
-
 // Helper function to parse materials
 Material parse_material(const nlohmann::json& material_json) {
     Material m;

@@ -9,6 +9,7 @@
 #include "sphere.h"
 #include "triangle.h"
 #include "cylinder.h"
+#include "tone_mapping.h"
 
 using json = nlohmann::json;
 
@@ -62,8 +63,6 @@ int main(int argc, char* argv[]) {
         vector3(camera_json["upVector"][0], camera_json["upVector"][1], camera_json["upVector"][2])
     );
 
-    
-
     // Parse lights
     for (const auto& light : scene_json["lightsources"]) {
         scene.add_light(Light{
@@ -71,6 +70,26 @@ int main(int argc, char* argv[]) {
             vector3(light["intensity"][0], light["intensity"][1], light["intensity"][2])
         });
     }
+
+    // Tone mapping
+    std::function<vector3(const vector3&)> tone_mapping = nullptr;
+    if (camera_json.contains("tone_mapping")) {
+        std::string tone_mapping_str = camera_json["tone_mapping"];
+
+        if (tone_mapping_str == "reinhard") {
+            tone_mapping = reinhard_tone_mapping;
+        } else if (tone_mapping_str == "aces") {
+            tone_mapping = aces_tone_mapping;
+        } else {
+            throw std::invalid_argument("Unknown tone mapping method: " + tone_mapping_str);
+        }
+    } else { // Default to exposure tone mapping
+        float exposure = camera_json["exposure"];
+        tone_mapping = [exposure](const vector3& color) {
+            return exposure_tone_mapping(color, exposure);
+        };
+    }
+
 
     // Render image
     const int image_width = camera_json["width"];
@@ -92,17 +111,19 @@ int main(int argc, char* argv[]) {
             double t_hit;
             std::shared_ptr<Shape> hit_shape;
 
+            vector3 shaded_color = scene.backgroundcolor; // default colour
+            
             if (scene.intersects(r, t_hit, hit_shape, max_t)) {
                 vector3 hit_point = r.origin + t_hit * r.direction;
                 vector3 normal = hit_shape->get_normal(hit_point);
 
                 // Calculate shading
-                vector3 shaded_color = scene.shade(r, hit_point, normal, hit_shape->material, 3);
-                write_colour(outfile, shaded_color);
-            } else {
-                // Use the scene's background color
-                write_colour(outfile, scene.backgroundcolor);
+                shaded_color = scene.shade(r, hit_point, normal, hit_shape->material, 3);
             }
+            
+            shaded_color = tone_mapping ? tone_mapping(shaded_color) : shaded_color;
+            vector3 final_color = gamma_correction(final_color, 1.0f / 2.2f);
+            write_colour(outfile, shaded_color);
         }
     }
 
