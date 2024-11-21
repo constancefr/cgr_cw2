@@ -90,7 +90,15 @@ int main(int argc, char* argv[]) {
         };
     }
 
-
+    // Load texture from json for each shape
+    // for (const auto& shape_data : scene_json["shapes"]) {
+    //     if (shape_data.contains("material") && shape_data["material"].contains("texture_file")) {
+    //         std::string texture_file = shape_data["material"]["texture_file"];
+    //         std::shared_ptr<Texture> texture = std::make_shared<Texture>(texture_file);
+    //         shape.set_texture(texture);
+    //     }
+    // }
+    
     // Render image
     const int image_width = camera_json["width"];
     const int image_height = camera_json["height"];
@@ -117,8 +125,12 @@ int main(int argc, char* argv[]) {
                 vector3 hit_point = r.origin + t_hit * r.direction;
                 vector3 normal = hit_shape->get_normal(hit_point);
 
+                // print hit_shape
+                // std::cout << "hit_shape: " << hit_shape << std::endl;
+
                 // Calculate shading
-                shaded_color = scene.shade(r, hit_point, normal, hit_shape->material, 3);
+                // shaded_color = scene.shade(r, hit_point, normal, *hit_shape, hit_shape->material, 3);
+                shaded_color = scene.shade(r, hit_point, normal, *hit_shape, 3);
             }
             
             shaded_color = tone_mapping ? tone_mapping(shaded_color) : shaded_color;

@@ -1,7 +1,8 @@
 #include "scene.h"
-#include "sphere.h"
-#include "triangle.h"
-#include "cylinder.h"
+// #include "shape.h"
+// #include "sphere.h"
+// #include "triangle.h"
+// #include "cylinder.h"
 
 // Helper function to parse materials
 Material parse_material(const nlohmann::json& material_json) {
@@ -45,14 +46,23 @@ void Scene::load_from_json(const nlohmann::json& scene_json) {
                 vector3(shape_data["center"][0], shape_data["center"][1], shape_data["center"][2]),
                 vector3(shape_data["axis"][0], shape_data["axis"][1], shape_data["axis"][2]),
                 shape_data["radius"],
-                // multiply height by 2 to get the full height of the cylinder
-                // shape_data["height"].get<double>() * 2,
                 shape_data["height"],
                 material
             );
         }
 
         if (shape) {
+
+
+            // Load texture to the shape's material if available
+            if (shape_data.contains("material") && shape_data["material"].contains("texture_file")) {
+                std::string texture_file = shape_data["material"]["texture_file"];
+                std::shared_ptr<Image> texture = std::make_shared<Image>(texture_file);
+
+                shape->material.texture = texture;
+                shape->material.texture_file = texture_file;
+            }
+
             add_shape(shape);
         }
     }
@@ -163,14 +173,17 @@ vector3 Scene::shade(
     const ray& r, 
     const vector3& hit_point, 
     const vector3& normal, 
-    const Material& material, 
+    const Shape& hit_shape,
+    // const Material& material, 
     int depth
 ) const {
     switch (render_mode) {
+        // TODO!!
         // case RenderMode::Binary:
             // return shade_binary(r, hit_point, normal, material);
         case RenderMode::BlinnPhong:
-            return shade_blinn_phong(r, hit_point, normal, material, depth);
+            // return shade_blinn_phong(r, hit_point, normal, hit_shape, material, depth);
+            return shade_blinn_phong(r, hit_point, normal, hit_shape, depth);
         default:
             throw std::runtime_error("Unsupported render mode.");
     }
@@ -180,11 +193,25 @@ vector3 Scene::shade_blinn_phong(
     const ray& r, 
     const vector3& hit_point, 
     const vector3& normal, 
-    const Material& material,
+    const Shape& hit_shape,
+    // const Material& material,
     int depth
 ) const {
     vector3 color(0.0, 0.0, 0.0); // Initialize the color
     vector3 view_dir = -r.direction.unit(); // Direction to the viewer
+
+    // Use texture if available
+    // vector3 diffuse_color = material.diffusecolor; // Default diffuse color
+    vector3 diffuse_color = hit_shape.material.diffusecolor; // Default diffuse color
+
+
+    if (hit_shape.material.texture) {
+        // Print out the texture file
+        // std::cout << "Texture file: " << hit_shape.material.texture_file << std::endl;
+
+        auto [u, v] = hit_shape.get_uv(hit_point);  // Calculate UV coordinates
+        diffuse_color = hit_shape.material.texture->get_color_at_uv(u, v);  // Fetch texture color
+    }
 
     for (const auto& light : lights) {
         vector3 light_dir = (light.position - hit_point).unit(); // Direction to the light source
@@ -199,27 +226,27 @@ vector3 Scene::shade_blinn_phong(
 
         // Diffuse component
         double diffuse_intensity = std::max(0.0, normal.dot(light_dir));
-        vector3 diffuse = material.kd * diffuse_intensity * material.diffusecolor * light.intensity;
+        vector3 diffuse = hit_shape.material.kd * diffuse_intensity * diffuse_color * light.intensity;
 
         // Specular component (Blinn-Phong)
         vector3 halfway_dir = (light_dir + view_dir).unit();
-        double spec_intensity = std::pow(std::max(0.0, normal.dot(halfway_dir)), material.specularexponent);
-        vector3 specular = material.ks * spec_intensity * material.specularcolor * light.intensity;
+        double spec_intensity = std::pow(std::max(0.0, normal.dot(halfway_dir)), hit_shape.material.specularexponent);
+        vector3 specular = hit_shape.material.ks * spec_intensity * hit_shape.material.specularcolor * light.intensity;
 
         // Accumulate contributions
         color += diffuse + specular;
     }
 
     // Reflection component
-    if (material.isreflective) {
-        vector3 reflection = compute_reflection(r, hit_point, normal, material, depth - 1);
+    if (hit_shape.material.isreflective) {
+        vector3 reflection = compute_reflection(r, hit_point, normal, hit_shape.material, depth - 1);
         color += reflection;
     }
 
     // Refraction component
-    if (material.isrefractive && depth > 0) {
+    if (hit_shape.material.isrefractive && depth > 0) {
         double ior_in = 1.0; // Air's refractive index
-        double ior_out = material.refractiveindex;
+        double ior_out = hit_shape.material.refractiveindex;
 
         // Determine the direction of the refracted ray
         vector3 refracted_dir = compute_refracted_direction(view_dir, normal, ior_in, ior_out);
@@ -236,11 +263,11 @@ vector3 Scene::shade_blinn_phong(
 
                 // Compute the refracted color
                 vector3 refracted_color = shade(
-                    refracted_ray, hit_point_refracted, normal_refracted, hit_shape_refracted->material, depth - 1
+                    refracted_ray, hit_point_refracted, normal_refracted, hit_shape, depth - 1
                 );
 
                 // Combine with existing color using transparency
-                color += material.transparency * refracted_color;
+                color += hit_shape.material.transparency * refracted_color;
             }
         }
     }

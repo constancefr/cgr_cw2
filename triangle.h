@@ -53,6 +53,10 @@ public:
         return t_hit > 1e-8; // Ray intersects the triangle
         // return true;
     }
+    
+    virtual std::pair<double, double> get_uv(const vector3& point) const {
+        return {0.0, 0.0}; // Not implemented
+    };
 
 };
 

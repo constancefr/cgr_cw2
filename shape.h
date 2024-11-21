@@ -2,23 +2,21 @@
 #define SHAPE_H
 
 #include "ray.h"
+#include "image.h"
 #include <memory>
 #include <vector>
+#include <optional>
 
-// Define Material struct that all shapes will share
-// struct Material {
-//     double ks, kd;                // Specular & diffuse reflection coefficient
-//     double specularexponent;
-//     vector3 diffusecolor, specularcolor;
-//     bool isreflective, isrefractive;
-//     double reflectivity, refractiveindex;
-// };
 struct Material {
     double kd, ks, reflectivity, refractiveindex;
-    double transparency = 0.4; // Add transparency
+    double transparency = 0.4; // keep transparency?
     double specularexponent;
     vector3 diffusecolor, specularcolor;
-    bool isreflective, isrefractive; // Flags to enable reflection/refraction
+    bool isreflective, isrefractive;
+    
+    // Add texture information
+    std::string texture_file;  // Path to texture file
+    std::shared_ptr<Image> texture;  // Pointer to loaded texture data
 };
 
 
@@ -29,6 +27,10 @@ public:
 
     Shape(const Material& mat) : material(mat) {}
 
+    // virtual void set_texture(std::shared_ptr<Image> texture) {
+    //     this->texture = texture;
+    // }
+
     // Pure virtual method to check for intersection with the ray
     virtual bool intersects(const ray& r, double& t_hit) const = 0;
 
@@ -36,6 +38,11 @@ public:
 
     // Virtual destructor to allow proper cleanup of derived classes
     virtual ~Shape() {}
+
+    // Texture support
+    virtual std::pair<double, double> get_uv(const vector3& point) const = 0;
+    
+
 };
 
 #endif

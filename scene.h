@@ -7,7 +7,9 @@
 #include "vector3.h"
 #include "ray.h"
 #include "shape.h"
+#include "sphere.h"
 #include "triangle.h"
+#include "cylinder.h"
 #include "libs/json.hpp"
 
 struct Light {
@@ -50,9 +52,11 @@ public:
         lights.push_back(light);
     }
 
-    vector3 shade(const ray& r, const vector3& hit_point, const vector3& normal, const Material& material, int depth) const;
+    // vector3 shade(const ray& r, const vector3& hit_point, const vector3& normal, const Shape& hit_shape, const Material& material, int depth) const;
+    vector3 shade(const ray& r, const vector3& hit_point, const vector3& normal, const Shape& hit_shape, int depth) const;
 
-    vector3 shade_blinn_phong(const ray& r, const vector3& hit_point, const vector3& normal, const Material& material, int depth) const;
+    // vector3 shade_blinn_phong(const ray& r, const vector3& hit_point, const vector3& normal, const Shape& hit_shape, const Material& material, int depth) const;
+    vector3 shade_blinn_phong(const ray& r, const vector3& hit_point, const vector3& normal, const Shape& hit_shape, int depth) const;
     
     // Utils
     bool intersects(const ray& r, double& t_hit, std::shared_ptr<Shape>& hit_shape, double max_t) const;

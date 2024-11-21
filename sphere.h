@@ -1,5 +1,8 @@
 #ifndef SPHERE_H
 #define SPHERE_H
+// #endif
+// #ifndef M_PI
+#define M_PI 3.14159265358979323846
 
 #include "shape.h"
 #include "ray.h"
@@ -10,9 +13,10 @@ class Sphere : public Shape {
 public:
     vector3 center;
     double radius;
+    Material material;
 
     Sphere(const vector3& c, double r, const Material& m) 
-        : Shape(m), center(c), radius(r) {}
+        : center(c), radius(r), Shape(m) {}
 
     // Ray-sphere intersection
     bool intersects(const ray& r, double& t_hit) const override {
@@ -35,6 +39,14 @@ public:
     vector3 get_normal(const vector3& point) const {
         return (point - center).unit();
     }
+
+    std::pair<double, double> get_uv(const vector3& point) const override {
+        vector3 p = (point - center).unit();  // Normalize to unit sphere
+        double u = 0.5 + atan2(p.z, p.x) / (2 * M_PI); // Angle around Y-axis
+        double v = 0.5 - asin(p.y) / M_PI;            // Vertical angle
+        return {u, v};
+    }
+
 };
 
 #endif

@@ -87,6 +87,10 @@ public:
         // 5. Return true if a valid intersection is found
         return t_hit >= 0;
     }
+
+    virtual std::pair<double, double> get_uv(const vector3& point) const {
+        return {0.0, 0.0}; // Not implemented
+    };
 };
 
 #endif
