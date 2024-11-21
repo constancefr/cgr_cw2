@@ -88,9 +88,35 @@ public:
         return t_hit >= 0;
     }
 
-    virtual std::pair<double, double> get_uv(const vector3& point) const {
-        return {0.0, 0.0}; // Not implemented
-    };
+    std::pair<double, double> get_uv(const vector3& point) const override {
+        if (std::abs(point.y - (center.y + height)) < 1e-6) {
+            // Top cap
+            return get_uv_cap(point, true);
+        } else if (std::abs(point.y - center.y) < 1e-6) {
+            // Bottom cap
+            return get_uv_cap(point, false);
+        } else {
+            // Curved surface
+            return get_uv_surface(point);
+        }
+    }
+
+    std::pair<double, double> get_uv_surface(const vector3& point) const {
+        double theta = atan2(point.z - center.z, point.x - center.x);
+        if (theta < 0) {
+            theta += 2 * M_PI;
+        }
+        double u = theta / (2 * M_PI);
+        double v = (point.y - center.y) / height;
+        return {u, v};
+    }
+
+    std::pair<double, double> get_uv_cap(const vector3& point, bool is_top) const {
+        double u = 0.5 + (point.x - center.x) / (2 * radius);
+        double v = 0.5 + (point.z - center.z) / (2 * radius);
+        return {u, v};
+    }
+
 };
 
 #endif

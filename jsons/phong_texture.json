@@ -34,7 +34,7 @@
                             "specularexponent":20, 
                             "diffusecolor":[0.8, 0.5, 0.5],
                             "specularcolor":[1.0,1.0,1.0],
-                            "isreflective":false,
+                            "isreflective":true,
                             "reflectivity":0.5,
                             "isrefractive":false,
                             "refractiveindex":1.0,
@@ -57,7 +57,8 @@
                             "isreflective":false,
                             "reflectivity":1,
                             "isrefractive":false,
-                            "refractiveindex":1.0
+                            "refractiveindex":1.0,
+                            "texture_file": "textures/cork.jpg"
                         } 
                 },
                 { 
@@ -65,6 +66,9 @@
                     "v0": [ -1, -0.5, 2],
                     "v1": [ 1, -0.5, 2],
                     "v2": [ 1, -0.5, 0],
+                    "uv0": [0, 1],
+                    "uv1": [1, 1],
+                    "uv2": [1, 0],
                     "material":
                         { 
                             "ks":0.1, 
@@ -72,10 +76,11 @@
                             "specularexponent":20, 
                             "diffusecolor":[0.5, 0.8, 0.5],
                             "specularcolor":[1.0,1.0,1.0],
-                            "isreflective":true,
+                            "isreflective":false,
                             "reflectivity":1.0,
                             "isrefractive":false,
-                            "refractiveindex":1.0
+                            "refractiveindex":1.0,
+                            "texture_file": "textures/grid.jpg"
                         } 
                 },
                 { 
@@ -83,6 +88,9 @@
                     "v0": [-1, -0.5, 0],
                     "v1": [-1, -0.5, 2],
                     "v2": [ 1, -0.5, 0],
+                    "uv0": [0, 0],
+                    "uv1": [0, 1],
+                    "uv2": [1, 0],
                     "material":
                         { 
                             "ks":0.1, 
@@ -90,10 +98,11 @@
                             "specularexponent":20, 
                             "diffusecolor":[0.5, 0.8, 0.5],
                             "specularcolor":[1.0,1.0,1.0],
-                            "isreflective":true,
+                            "isreflective":false,
                             "reflectivity":1.0,
                             "isrefractive":false,
-                            "refractiveindex":1.0
+                            "refractiveindex":1.0,
+                            "texture_file": "textures/grid.jpg"
                         } 
                 }  
             ] 

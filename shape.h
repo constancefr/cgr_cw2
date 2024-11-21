@@ -27,10 +27,6 @@ public:
 
     Shape(const Material& mat) : material(mat) {}
 
-    // virtual void set_texture(std::shared_ptr<Image> texture) {
-    //     this->texture = texture;
-    // }
-
     // Pure virtual method to check for intersection with the ray
     virtual bool intersects(const ray& r, double& t_hit) const = 0;
 
