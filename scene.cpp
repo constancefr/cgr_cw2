@@ -163,6 +163,22 @@ vector3 Scene::compute_reflection(
                 ? hit_shape_scattered->material.texture->get_color_at_uv(uv.first, uv.second)
                 : hit_shape_scattered->material.diffusecolor;
 
+            // Compute the shadow factor for this point
+            double shadow_factor = 1.0; // Default: fully lit
+            for (const auto& light : lights) {
+                // Shadow ray direction and offset origin to avoid self-intersection
+                vector3 light_dir = (light.position - hit_point_scattered).unit();
+                ray shadow_ray(hit_point_scattered + light_dir * 0.001, light_dir);
+
+                // Check if the shadow ray is blocked
+                double t_shadow;
+                std::shared_ptr<Shape> shadow_hit_shape;
+                if (intersects(shadow_ray, t_shadow, shadow_hit_shape, (light.position - hit_point_scattered).length())) {
+                    shadow_factor = 0.0; // Fully in shadow
+                    break; // No need to test other lights for this point
+                }
+            }
+
             // Compute the color at the reflection hit point
             vector3 view_dir_scattered = -scattered_ray.direction.unit();
             vector3 scattered_color = compute_blinn_phong(hit_point_scattered, normal_scattered, view_dir_scattered, hit_shape_scattered->material, *hit_shape_scattered);
@@ -170,7 +186,7 @@ vector3 Scene::compute_reflection(
             // Blend the texture color into the scattered reflection color
             vector3 final_color = texture_color * hit_shape_scattered->material.kd + scattered_color * hit_shape_scattered->material.ks;
 
-            accumulated_color += final_color;
+            accumulated_color += final_color * shadow_factor;
         }
     }
 
