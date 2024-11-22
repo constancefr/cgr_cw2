@@ -120,8 +120,68 @@ vector3 Scene::compute_blinn_phong(
     return color;
 }
 
+vector3 Scene::compute_reflection(
+    const ray& r,
+    const vector3& hit_point,
+    const vector3& normal,
+    const Material& material,
+    int depth
+) const {
+    if (depth <= 0 || !material.isreflective) {
+        return vector3(0.0, 0.0, 0.0);
+    }
 
+    // Ideal reflection direction
+    vector3 reflect_dir = r.direction - 2 * (normal.dot(r.direction)) * normal;
 
+    // Glossy reflection parameters
+    double spread = 1.0 / material.specularexponent; // Spread inversely proportional to specular exponent
+    int sample_count = 16;                           // Number of samples for averaging
+    vector3 accumulated_color(0.0, 0.0, 0.0);
+
+    for (int i = 0; i < sample_count; ++i) {
+        // Generate a random perturbation around the reflection direction
+        vector3 scattered_dir = reflect_dir.random_perturbation(normal, spread);
+
+        // Create a perturbed reflection ray
+        ray scattered_ray(hit_point + scattered_dir * 0.001, scattered_dir);
+
+        // Check for intersection of the scattered reflection ray
+        double t_hit_scattered;
+        std::shared_ptr<Shape> hit_shape_scattered;
+
+        if (intersects(scattered_ray, t_hit_scattered, hit_shape_scattered, std::numeric_limits<double>::max())) {
+            // Get the hit point and normal at the intersection
+            vector3 hit_point_scattered = scattered_ray.origin + t_hit_scattered * scattered_ray.direction;
+            vector3 normal_scattered = hit_shape_scattered->get_normal(hit_point_scattered);
+
+            // Calculate UV coordinates for the reflection point
+            auto uv = hit_shape_scattered->get_uv(hit_point_scattered);
+
+            // Sample the texture color if a texture exists
+            vector3 texture_color = hit_shape_scattered->material.texture
+                ? hit_shape_scattered->material.texture->get_color_at_uv(uv.first, uv.second)
+                : hit_shape_scattered->material.diffusecolor;
+
+            // Compute the color at the reflection hit point
+            vector3 view_dir_scattered = -scattered_ray.direction.unit();
+            vector3 scattered_color = compute_blinn_phong(hit_point_scattered, normal_scattered, view_dir_scattered, hit_shape_scattered->material, *hit_shape_scattered);
+
+            // Blend the texture color into the scattered reflection color
+            vector3 final_color = texture_color * hit_shape_scattered->material.kd + scattered_color * hit_shape_scattered->material.ks;
+
+            accumulated_color += final_color;
+        }
+    }
+
+    // Average the accumulated color
+    vector3 averaged_color = accumulated_color / static_cast<double>(sample_count);
+
+    // Combine the averaged reflection color with reflectivity
+    return averaged_color * material.reflectivity;
+}
+
+/*
 vector3 Scene::compute_reflection(
     const ray& r,
     const vector3& hit_point,
@@ -167,7 +227,7 @@ vector3 Scene::compute_reflection(
     // If no reflection is found, return black
     return vector3(0.0, 0.0, 0.0);
 }
-
+*/
 
 vector3 Scene::compute_refracted_direction(
     const vector3& incident,  // Incident ray direction (normalized)
@@ -260,6 +320,7 @@ vector3 Scene::shade_blinn_phong(
     if (hit_shape.material.isreflective) {
         vector3 reflection = compute_reflection(r, hit_point, normal, hit_shape.material, depth - 1);
         color += reflection;
+
     }
 
     // Refraction component

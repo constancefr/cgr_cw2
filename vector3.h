@@ -1,5 +1,6 @@
 #ifndef vector3_H
 #define vector3_H
+#define M_PI 3.14159265358979323846
 
 #include <cmath>
 #include <iostream>
@@ -70,6 +71,33 @@ public:
     }
     friend std::ostream& operator<<(std::ostream& os, const vector3& v) {
         return os << v.x << " " << v.y << " " << v.z;
+    }
+
+    vector3 random_perturbation(const vector3& normal, double spread) const {
+        // Generate a random direction within a cone of angle `spread`
+        vector3 tangent1, tangent2;
+        orthonormal_basis(normal, tangent1, tangent2);
+
+        double phi = 2.0 * M_PI * random_double(); // Random angle around the cone
+        double z = std::cos(spread * random_double()); // Random height in the cone
+        double xy = std::sqrt(1.0 - z * z);
+
+        // Convert spherical coordinates to Cartesian
+        vector3 random_dir = z * normal + xy * std::cos(phi) * tangent1 + xy * std::sin(phi) * tangent2;
+        return random_dir.unit(); // Normalize
+    }
+
+    void orthonormal_basis(const vector3& n, vector3& t1, vector3& t2) const {
+        if (std::fabs(n.x) > std::fabs(n.z)) {
+            t1 = vector3(-n.y, n.x, 0).unit();
+        } else {
+            t1 = vector3(0, -n.z, n.y).unit();
+        }
+        t2 = n.cross(t1).unit();
+    }
+
+    double random_double() const {
+        return rand() / (RAND_MAX + 1.0);
     }
 };
 
