@@ -72,6 +72,13 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const vector3& v) {
         return os << v.x << " " << v.y << " " << v.z;
     }
+    // Accessor method for individual components
+    double operator[](int i) const {
+        if (i == 0) return x;
+        else if (i == 1) return y;
+        else if (i == 2) return z;
+        else throw std::out_of_range("Index out of range in vector3");
+    }
 
     vector3 random_perturbation(const vector3& normal, double spread) const {
         // Generate a random direction within a cone of angle `spread`

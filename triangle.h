@@ -70,33 +70,21 @@ public:
         return {u, v};
     }
 
-/*
-    // Calculate UV coordinates using barycentric interpolation
-    virtual std::pair<double, double> get_uv(const vector3& point) const {
-        // Compute barycentric coordinates
-        vector3 v0v1 = v1 - v0;
-        vector3 v0v2 = v2 - v0;
-        vector3 v0p = point - v0;
-
-        double d00 = v0v1.dot(v0v1);
-        double d01 = v0v1.dot(v0v2);
-        double d11 = v0v2.dot(v0v2);
-        double d20 = v0p.dot(v0v1);
-        double d21 = v0p.dot(v0v2);
-
-        double denom = d00 * d11 - d01 * d01;
-        double v = (d11 * d20 - d01 * d21) / denom;
-        double w = (d00 * d21 - d01 * d20) / denom;
-        double u = 1.0 - v - w;
-
-        // Interpolate UV coordinates using barycentric coordinates
-        // Planar mapping: assume (0, 0) at v0, (1, 0) at v1, (0, 1) at v2 for simplicity
-        double u_final = u * 0.0 + v * 1.0 + w * 0.0; // Example: (0,0), (1,0), (0,1) mapping
-        double v_final = u * 0.0 + v * 0.0 + w * 1.0;
-
-        return {u_final, v_final}; // Return UV coordinates
+    // Get bounding box for the triangle
+    AABB get_bbox() const override {
+        AABB bbox;
+        bbox.min = vector3(
+            std::min({v0.x, v1.x, v2.x}),
+            std::min({v0.y, v1.y, v2.y}),
+            std::min({v0.z, v1.z, v2.z})
+        );
+        bbox.max = vector3(
+            std::max({v0.x, v1.x, v2.x}),
+            std::max({v0.y, v1.y, v2.y}),
+            std::max({v0.z, v1.z, v2.z})
+        );
+        return bbox;
     }
-*/
 
 };
 

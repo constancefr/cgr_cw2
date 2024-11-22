@@ -13,7 +13,8 @@
 
 using json = nlohmann::json;
 
-double max_t = std::numeric_limits<double>::max(); // No upper bound for primary rays
+// double max_t = std::numeric_limits<double>::max(); // No upper bound for primary rays
+double max_t = 1000.0;
 
 json load_json(const std::string& filename) {
     std::ifstream file(filename);
@@ -90,14 +91,15 @@ int main(int argc, char* argv[]) {
         };
     }
 
-    // Load texture from json for each shape
-    // for (const auto& shape_data : scene_json["shapes"]) {
-    //     if (shape_data.contains("material") && shape_data["material"].contains("texture_file")) {
-    //         std::string texture_file = shape_data["material"]["texture_file"];
-    //         std::shared_ptr<Texture> texture = std::make_shared<Texture>(texture_file);
-    //         shape.set_texture(texture);
-    //     }
-    // }
+    // Parse command-line argument for BVH flag
+    if (argc > 2) {
+        std::string bvh_flag = argv[2];
+        if (bvh_flag == "--bvh") {
+            scene.use_bvh = true;
+        }
+    }
+    // Build BVH by creating a tree from the list of shapes in the scene
+    scene.build_bvh(); // check if works correctly???
     
     // Render image
     const int image_width = camera_json["width"];
@@ -110,26 +112,20 @@ int main(int argc, char* argv[]) {
     outfile << "P3\n" << image_width << " " << image_height << "\n255\n";
     std::cout << "PPM file header: \n" << "P3\n" << image_width << " " << image_height << "\n255\n";
     
-    // for (int j = image_height - 1; j >= 0; --j) { // from top to bottom?
+    // Parse through each pixel
     for (int j = 0; j < image_height; ++j) {
-        for (int i = 0; i < image_width; ++i) { // From left to right
+        for (int i = 0; i < image_width; ++i) {
             auto [u, v] = normalize_pixel(i, j, image_width, image_height);
             ray r = camera.get_ray(u, v);
 
             double t_hit;
             std::shared_ptr<Shape> hit_shape;
-
             vector3 shaded_color = scene.backgroundcolor; // default colour
             
             if (scene.intersects(r, t_hit, hit_shape, max_t)) {
                 vector3 hit_point = r.origin + t_hit * r.direction;
                 vector3 normal = hit_shape->get_normal(hit_point);
 
-                // print hit_shape
-                // std::cout << "hit_shape: " << hit_shape << std::endl;
-
-                // Calculate shading
-                // shaded_color = scene.shade(r, hit_point, normal, *hit_shape, hit_shape->material, 3);
                 shaded_color = scene.shade(r, hit_point, normal, *hit_shape, 3);
             }
             

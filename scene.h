@@ -28,6 +28,8 @@ public:
     vector3 backgroundcolor;
     std::vector<std::shared_ptr<Shape>> shapes;
     std::vector<Light> lights;
+    std::shared_ptr<BVH> bvh;
+    bool use_bvh = false;  // Flag to toggle BVH acceleration
 
     RenderMode parse_render_mode(const std::string& mode_str) {
         if (mode_str == "binary") return RenderMode::Binary;
@@ -57,9 +59,6 @@ public:
 
     // vector3 shade_blinn_phong(const ray& r, const vector3& hit_point, const vector3& normal, const Shape& hit_shape, const Material& material, int depth) const;
     vector3 shade_blinn_phong(const ray& r, const vector3& hit_point, const vector3& normal, const Shape& hit_shape, int depth) const;
-    
-    // Utils
-    bool intersects(const ray& r, double& t_hit, std::shared_ptr<Shape>& hit_shape, double max_t) const;
 
     vector3 compute_blinn_phong(
         const vector3& point,
@@ -83,6 +82,25 @@ public:
         double ior_in,
         double ior_out
     ) const;
+
+    // BVH
+    void build_bvh() {
+        if (use_bvh) {
+            bvh = std::make_shared<BVH>(shapes);
+        }
+    }
+
+    bool intersects(const ray& r, double& t_hit, std::shared_ptr<Shape>& hit_shape, double max_t) const {
+        if (use_bvh) {
+            return bvh->intersects(r, t_hit, hit_shape, max_t); // max_t??
+        }
+        // Fallback to brute-force intersection if no BVH
+        return brute_force_intersects(r, t_hit, hit_shape, max_t);
+    }
+
+    bool brute_force_intersects(const ray& r, double& t_hit, std::shared_ptr<Shape>& hit_shape, double max_t) const;
+    // bool intersects(const ray& r, double& t_hit, std::shared_ptr<Shape>& hit_shape, double max_t) const;
+
 
 };
 

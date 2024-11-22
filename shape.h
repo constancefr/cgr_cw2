@@ -3,9 +3,12 @@
 
 #include "ray.h"
 #include "image.h"
+#include "bvh.h"
 #include <memory>
 #include <vector>
 #include <optional>
+
+struct AABB;
 
 struct Material {
     double kd, ks, reflectivity, refractiveindex;
@@ -37,8 +40,10 @@ public:
 
     // Texture support
     virtual std::pair<double, double> get_uv(const vector3& point) const = 0;
-    
 
+    // Get the bounding box of the shape
+    virtual AABB get_bbox() const = 0;
+    
 };
 
 #endif

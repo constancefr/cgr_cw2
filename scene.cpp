@@ -68,7 +68,7 @@ void Scene::load_from_json(const nlohmann::json& scene_json) {
     }
 }
 
-bool Scene::intersects(const ray& r, double& t_hit, std::shared_ptr<Shape>& hit_shape, double max_t) const {
+bool Scene::brute_force_intersects(const ray& r, double& t_hit, std::shared_ptr<Shape>& hit_shape, double max_t) const {
     bool hit = false;
     double closest_t = max_t; // Only check up to max_t to avoid hitting objects beyond the light source
     for (const auto& shape : shapes) {
@@ -84,18 +84,16 @@ bool Scene::intersects(const ray& r, double& t_hit, std::shared_ptr<Shape>& hit_
 }
 
 vector3 Scene::compute_blinn_phong(
-    const vector3& point,           // Point on the surface
+    const vector3& point,
     const vector3& normal,          // Surface normal at the point
     const vector3& view_dir,        // Direction from point to camera
-    const Material& material,       // Material of the surface
-    const Shape& shape              // Shape of the surface
+    const Material& material,
+    const Shape& shape
 ) const {
-    vector3 color(0.0, 0.0, 0.0);  // Accumulated color
+    vector3 color(0.0, 0.0, 0.0);
 
-    // Get the UV coordinates from the shape
     auto uv = shape.get_uv(point);
 
-    // Sample the texture color if a texture exists
     vector3 texture_color = material.texture
         ? material.texture->get_color_at_uv(uv.first, uv.second)
         : material.diffusecolor; // Default to diffuse color if no texture is present
@@ -197,53 +195,6 @@ vector3 Scene::compute_reflection(
     return averaged_color * material.reflectivity;
 }
 
-/*
-vector3 Scene::compute_reflection(
-    const ray& r,
-    const vector3& hit_point,
-    const vector3& normal,
-    const Material& material,
-    int depth
-) const {
-    if (depth <= 0 || !material.isreflective) {
-        return vector3(0.0, 0.0, 0.0);
-    }
-
-    // Calculate reflection direction
-    vector3 reflect_dir = r.direction - 2 * (normal.dot(r.direction)) * normal;
-
-    // Create a reflection ray
-    ray reflection_ray(hit_point + reflect_dir * 0.001, reflect_dir); // Slight offset to avoid self-intersection
-
-    // Check for intersection of the reflection ray
-    double t_hit_reflection;
-    std::shared_ptr<Shape> hit_shape_reflection;
-    
-    if (intersects(reflection_ray, t_hit_reflection, hit_shape_reflection, std::numeric_limits<double>::max())) {
-        // Get the color of the reflection
-        vector3 hit_point_reflection = reflection_ray.origin + t_hit_reflection * reflection_ray.direction;
-        vector3 normal_reflection = hit_shape_reflection->get_normal(hit_point_reflection);
-        vector3 view_dir_reflection = -reflection_ray.direction.unit();
-
-        // Calculate UV coordinates for the reflection point
-        auto uv = hit_shape_reflection->get_uv(hit_point_reflection);
-
-        // Sample the texture color if a texture exists
-        vector3 texture_color = hit_shape_reflection->material.texture
-            ? hit_shape_reflection->material.texture->get_color_at_uv(uv.first, uv.second)
-            : hit_shape_reflection->material.diffusecolor;
-
-        // Compute the color for this reflection ray recursively
-        vector3 reflection_color = compute_blinn_phong(hit_point_reflection, normal_reflection, view_dir_reflection, hit_shape_reflection->material, *hit_shape_reflection);
-
-        // Combine the reflection color with the original color using reflectivity
-        return reflection_color * material.reflectivity;
-    }
-
-    // If no reflection is found, return black
-    return vector3(0.0, 0.0, 0.0);
-}
-*/
 
 vector3 Scene::compute_refracted_direction(
     const vector3& incident,  // Incident ray direction (normalized)
@@ -295,15 +246,9 @@ vector3 Scene::shade_blinn_phong(
     vector3 color(0.0, 0.0, 0.0); // Initialize the color
     vector3 view_dir = -r.direction.unit(); // Direction to the viewer
 
-    // Use texture if available
-    // vector3 diffuse_color = material.diffusecolor; // Default diffuse color
-    vector3 diffuse_color = hit_shape.material.diffusecolor; // Default diffuse color
-
+    vector3 diffuse_color = hit_shape.material.diffusecolor;
 
     if (hit_shape.material.texture) {
-        // Print out the texture file
-        // std::cout << "Texture file: " << hit_shape.material.texture_file << std::endl;
-
         auto [u, v] = hit_shape.get_uv(hit_point);  // Calculate UV coordinates
         diffuse_color = hit_shape.material.texture->get_color_at_uv(u, v);  // Fetch texture color
     }
@@ -367,7 +312,6 @@ vector3 Scene::shade_blinn_phong(
             }
         }
     }
-
 
     return color;
 }

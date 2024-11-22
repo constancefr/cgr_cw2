@@ -117,6 +117,14 @@ public:
         return {u, v};
     }
 
+    // Get bounding box for the cylinder
+    AABB get_bbox() const override {
+        AABB bbox;
+        bbox.min = center - vector3(radius, height, radius);
+        bbox.max = center + vector3(radius, height, radius);
+        return bbox;
+    }
+
 };
 
 #endif

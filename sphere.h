@@ -47,6 +47,13 @@ public:
         return {u, v};
     }
 
+    AABB get_bbox() const override {
+        AABB bbox;
+        bbox.min = center - vector3(radius, radius, radius);
+        bbox.max = center + vector3(radius, radius, radius);
+        return bbox;
+    }
+
 };
 
 #endif
