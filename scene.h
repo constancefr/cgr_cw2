@@ -65,7 +65,8 @@ public:
         const vector3& point,
         const vector3& normal,
         const vector3& view_dir,
-        const Material& material
+        const Material& material,
+        const Shape& shape
     ) const;
 
     vector3 compute_reflection(
