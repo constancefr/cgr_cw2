@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <random>
 #include "libs/json.hpp"
 #include "vector3.h"
 #include "colour.h"
@@ -28,11 +29,24 @@ json load_json(const std::string& filename) {
 }
 
 // Normalize pixel coordinates
-std::pair<double, double> normalize_pixel(int i, int j, int image_width, int image_height) {
-    double u = double(i) / (image_width - 1);  // Horizontal coordinate (0.0 to 1.0)
-    double v = double(j) / (image_height - 1); // Vertical coordinate (0.0 to 1.0)
-    return {u, v};
+// std::pair<double, double> normalize_pixel(int i, int j, int image_width, int image_height) {
+//     double u = double(i) / (image_width - 1);  // Horizontal coordinate (0.0 to 1.0)
+//     double v = double(j) / (image_height - 1); // Vertical coordinate (0.0 to 1.0)
+//     return {u, v};
+// }
+std::pair<double, double> normalize_pixel(int i, int j, int width, int height) {
+    return { (i + 0.5) / width, (j + 0.5) / height }; // Center pixel by default
 }
+
+
+double random_double(double min, double max) {
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(min, max);
+    return dis(gen);
+}
+
+
 
 
 int main(int argc, char* argv[]) {
@@ -93,11 +107,23 @@ int main(int argc, char* argv[]) {
         };
     }
 
-    // Parse command-line argument for BVH flag
+    // Parse command-line argument for flags
     if (argc > 2) {
         std::string bvh_flag = argv[2];
         if (bvh_flag == "--bvh") {
             scene.use_bvh = true;
+        }
+        if (argc > 3) {
+            std::string antialiasing_flag = argv[3];
+            if (antialiasing_flag == "--antialiasing") {
+                scene.enable_antialiasing = true;
+            }
+            if (argc > 4) {
+                std::string samples_flag = argv[4];
+                int samples_per_pixel = std::stoi(samples_flag);
+            } else {
+                int samples_per_pixel = 4; // default
+            }
         }
     }
 
@@ -119,33 +145,65 @@ int main(int argc, char* argv[]) {
     outfile << "P3\n" << image_width << " " << image_height << "\n255\n";
     std::cout << "PPM file header: \n" << "P3\n" << image_width << " " << image_height << "\n255\n";
     
+    int samples_per_pixel = 16; // Adjust this for desired quality
+
     // Parse through each pixel
     for (int j = 0; j < image_height; ++j) {
         for (int i = 0; i < image_width; ++i) {
-            auto [u, v] = normalize_pixel(i, j, image_width, image_height);
-            ray r = camera.get_ray(u, v);
+            vector3 pixel_color(0.0, 0.0, 0.0); // Final pixel color
 
-            double t_hit;
-            // double t_hit = max_t; // ??
-            std::shared_ptr<Shape> hit_shape;
+            if (scene.enable_antialiasing) {
+                // Antialiasing logic: Multi-sample and average
+                for (int s = 0; s < samples_per_pixel; ++s) {
+                    // Create jitter
+                    double u_offset = random_double(-1.0, 1.0);
+                    double v_offset = random_double(-1.0, 1.0);
 
-            vector3 shaded_color = scene.backgroundcolor; // default colour
-            if (scene.render_mode == RenderMode::Binary) {
-                shaded_color = vector3(0.0, 0.0, 0.0); // set default to black
+                    auto [u, v] = normalize_pixel(i + u_offset, j + v_offset, image_width, image_height);
+                    ray r = camera.get_ray(u, v);
+
+                    double t_hit;
+                    std::shared_ptr<Shape> hit_shape;
+                    vector3 sample_color = scene.backgroundcolor; // default
+
+                    if (scene.intersects(r, t_hit, hit_shape, max_t)) {
+                        vector3 hit_point = r.origin + t_hit * r.direction;
+                        vector3 normal = hit_shape->get_normal(hit_point);
+                        sample_color = scene.shade(r, hit_point, normal, *hit_shape, 8);
+                    }
+
+                    pixel_color += sample_color; // Accumulate sample colors
+                }
+
+                // Average the accumulated color
+                vector3 pixel_color = pixel_color / samples_per_pixel;
+                
+            } else {
+                // No antialiasing: Single ray per pixel
+                auto [u, v] = normalize_pixel(i, j, image_width, image_height);
+                ray r = camera.get_ray(u, v);
+
+                double t_hit;
+                std::shared_ptr<Shape> hit_shape;
+                pixel_color = scene.backgroundcolor;
+
+                if (scene.intersects(r, t_hit, hit_shape, max_t)) {
+                    vector3 hit_point = r.origin + t_hit * r.direction;
+                    vector3 normal = hit_shape->get_normal(hit_point);
+                    pixel_color = scene.shade(r, hit_point, normal, *hit_shape, 8);
+                }
             }
 
-            if (scene.intersects(r, t_hit, hit_shape, max_t)) {
-                vector3 hit_point = r.origin + t_hit * r.direction;
-                vector3 normal = hit_shape->get_normal(hit_point);
+            // Apply tone mapping and gamma correction
+            pixel_color = tone_mapping ? tone_mapping(pixel_color) : pixel_color;
+            // pixel_color = gamma_correction(pixel_color, 1.0f / 2.2f);
 
-                shaded_color = scene.shade(r, hit_point, normal, *hit_shape, 8);
-            }
-            
-            shaded_color = tone_mapping ? tone_mapping(shaded_color) : shaded_color;
-            vector3 final_color = gamma_correction(final_color, 1.0f / 2.2f);
-            write_colour(outfile, shaded_color);
+            // Write the final color to the output
+            write_colour(outfile, pixel_color);
         }
     }
+
+
 
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_time = end_time - start_time;

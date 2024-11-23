@@ -29,7 +29,8 @@ public:
     std::vector<std::shared_ptr<Shape>> shapes;
     std::vector<Light> lights;
     std::shared_ptr<BVH> bvh;
-    bool use_bvh = false;  // Flag to toggle BVH acceleration
+    bool use_bvh = false;
+    bool enable_antialiasing = false;
 
     RenderMode parse_render_mode(const std::string& mode_str) {
         if (mode_str == "binary") return RenderMode::Binary;
