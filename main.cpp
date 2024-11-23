@@ -65,11 +65,13 @@ int main(int argc, char* argv[]) {
     );
 
     // Parse lights
-    for (const auto& light : scene_json["lightsources"]) {
-        scene.add_light(Light{
-            vector3(light["position"][0], light["position"][1], light["position"][2]),
-            vector3(light["intensity"][0], light["intensity"][1], light["intensity"][2])
-        });
+    if (scene_json.contains("lightsources")) {
+        for (const auto& light : scene_json["lightsources"]) {
+            scene.add_light(Light{
+                vector3(light["position"][0], light["position"][1], light["position"][2]),
+                vector3(light["intensity"][0], light["intensity"][1], light["intensity"][2])
+            });
+        }
     }
 
     // Tone mapping
@@ -126,8 +128,12 @@ int main(int argc, char* argv[]) {
             double t_hit;
             // double t_hit = max_t; // ??
             std::shared_ptr<Shape> hit_shape;
+
             vector3 shaded_color = scene.backgroundcolor; // default colour
-            
+            if (scene.render_mode == RenderMode::Binary) {
+                shaded_color = vector3(0.0, 0.0, 0.0); // set default to black
+            }
+
             if (scene.intersects(r, t_hit, hit_shape, max_t)) {
                 vector3 hit_point = r.origin + t_hit * r.direction;
                 vector3 normal = hit_shape->get_normal(hit_point);

@@ -20,6 +20,10 @@ struct Material {
     // Add texture information
     std::string texture_file;  // Path to texture file
     std::shared_ptr<Image> texture;  // Pointer to loaded texture data
+
+    // Default material constructor
+    Material() : kd(0.0), ks(0.0), reflectivity(0.0), refractiveindex(1.0), specularexponent(0.0),
+                 diffusecolor(0.0, 0.0, 0.0), specularcolor(0.0, 0.0, 0.0), isreflective(false), isrefractive(false) {}
 };
 
 

@@ -6,7 +6,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/raytracer.exe",
-            "args": ["jsons/bvh_stress_test.json", "--bvh"],
+            "args": ["jsons/binary_primitives.json"],
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}",
             "environment": []

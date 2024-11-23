@@ -25,7 +25,12 @@ void Scene::load_from_json(const nlohmann::json& scene_json) {
 
     // Add shapes
     for (const auto& shape_data : scene_json["shapes"]) {
-        Material material = parse_material(shape_data["material"]);  // Parse material
+        Material material;
+        if (shape_data.contains("material")) {
+            material = parse_material(shape_data["material"]);
+        } else {
+            material = Material();  // default material
+        }
 
         std::shared_ptr<Shape> shape = nullptr;
         if (shape_data["type"] == "sphere") {
@@ -226,10 +231,9 @@ vector3 Scene::shade(
 ) const {
     switch (render_mode) {
         // TODO!!
-        // case RenderMode::Binary:
-            // return shade_binary(r, hit_point, normal, material);
+        case RenderMode::Binary:
+            return vector3(1.0, 0.0, 0.0); // red
         case RenderMode::BlinnPhong:
-            // return shade_blinn_phong(r, hit_point, normal, hit_shape, material, depth);
             return shade_blinn_phong(r, hit_point, normal, hit_shape, depth);
         default:
             throw std::runtime_error("Unsupported render mode.");

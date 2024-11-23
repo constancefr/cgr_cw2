@@ -56,6 +56,8 @@ public:
 
     // vector3 shade(const ray& r, const vector3& hit_point, const vector3& normal, const Shape& hit_shape, const Material& material, int depth) const;
     vector3 shade(const ray& r, const vector3& hit_point, const vector3& normal, const Shape& hit_shape, int depth) const;
+    
+    vector3 shade_binary(const ray& r, const vector3& hit_point, const vector3& normal, const Shape& hit_shape, int depth) const;
 
     // vector3 shade_blinn_phong(const ray& r, const vector3& hit_point, const vector3& normal, const Shape& hit_shape, const Material& material, int depth) const;
     vector3 shade_blinn_phong(const ray& r, const vector3& hit_point, const vector3& normal, const Shape& hit_shape, int depth) const;
