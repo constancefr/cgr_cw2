@@ -98,9 +98,14 @@ int main(int argc, char* argv[]) {
             scene.use_bvh = true;
         }
     }
+
     // Build BVH by creating a tree from the list of shapes in the scene
-    scene.build_bvh(); // check if works correctly???
+    if (scene.use_bvh) {
+        scene.build_bvh();
+    }
     
+    auto start_time = std::chrono::high_resolution_clock::now();
+
     // Render image
     const int image_width = camera_json["width"];
     const int image_height = camera_json["height"];
@@ -119,6 +124,7 @@ int main(int argc, char* argv[]) {
             ray r = camera.get_ray(u, v);
 
             double t_hit;
+            // double t_hit = max_t; // ??
             std::shared_ptr<Shape> hit_shape;
             vector3 shaded_color = scene.backgroundcolor; // default colour
             
@@ -126,7 +132,7 @@ int main(int argc, char* argv[]) {
                 vector3 hit_point = r.origin + t_hit * r.direction;
                 vector3 normal = hit_shape->get_normal(hit_point);
 
-                shaded_color = scene.shade(r, hit_point, normal, *hit_shape, 3);
+                shaded_color = scene.shade(r, hit_point, normal, *hit_shape, 8);
             }
             
             shaded_color = tone_mapping ? tone_mapping(shaded_color) : shaded_color;
@@ -134,6 +140,12 @@ int main(int argc, char* argv[]) {
             write_colour(outfile, shaded_color);
         }
     }
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed_time = end_time - start_time;
+
+    std::cout << "Render completed in: " << elapsed_time.count() << " seconds.\n";
+    std::cout << "BVH enabled: " << (scene.use_bvh ? "Yes" : "No") << "\n";
 
     outfile.close();
     

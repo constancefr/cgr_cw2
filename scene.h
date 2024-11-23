@@ -92,9 +92,9 @@ public:
 
     bool intersects(const ray& r, double& t_hit, std::shared_ptr<Shape>& hit_shape, double max_t) const {
         if (use_bvh) {
-            return bvh->intersects(r, t_hit, hit_shape, max_t); // max_t??
+            return bvh->intersects(r, t_hit, hit_shape, max_t);
         }
-        // Fallback to brute-force intersection if no BVH
+        // Brute force: iterate over all shapes in the scene and checks for intersections with the given ray.
         return brute_force_intersects(r, t_hit, hit_shape, max_t);
     }
 

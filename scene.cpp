@@ -68,6 +68,7 @@ void Scene::load_from_json(const nlohmann::json& scene_json) {
     }
 }
 
+// Iterates over all shapes in the scene and checks for intersections with the given ray.
 bool Scene::brute_force_intersects(const ray& r, double& t_hit, std::shared_ptr<Shape>& hit_shape, double max_t) const {
     bool hit = false;
     double closest_t = max_t; // Only check up to max_t to avoid hitting objects beyond the light source

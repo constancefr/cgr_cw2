@@ -1,7 +1,7 @@
 #ifndef BVH_H
 #define BVH_H
 
-// #include "shape.h"
+#include "shape.h"
 #include "vector3.h"
 #include "ray.h"
 #include <memory>
@@ -22,9 +22,44 @@ struct AABB {
         max = vector3(std::max(max.x, other.max.x), std::max(max.y, other.max.y), std::max(max.z, other.max.z));
     }
 
+    // // Calculate surface area of the AABB
+    // double surface_area() const {
+    //     vector3 extent = max - min; // Calculate width, height, and depth
+    //     return 2.0 * (extent.x * extent.y + extent.x * extent.z + extent.y * extent.z);
+    // }
+
+    // Expand the AABB to include a point
+    void expand(const vector3& point) {
+        min = vector3(std::min(min.x, point.x), std::min(min.y, point.y), std::min(min.z, point.z));
+        max = vector3(std::max(max.x, point.x), std::max(max.y, point.y), std::max(max.z, point.z));
+    }
+
+    // Calculate the centroid of the AABB
+    vector3 centroid() const {
+        return 0.5 * (min + max);
+    }
+
+    // Calculate the extent of the AABB (size along each axis)
+    vector3 extent() const {
+        return max - min;
+    }
+
+    size_t largest_empty_axis(const std::vector<std::shared_ptr<Shape>>& shapes) const;
+
+    /* Does not take empty space into account */
+    /*
+    size_t largest_extent_axis() const {
+        vector3 e = extent();
+        if (e.x > e.y && e.x > e.z) return 0;  // X-axis
+        if (e.y > e.z) return 1;               // Y-axis
+        return 2;                              // Z-axis
+    }
+    */
+    
     // Check if a ray intersects this AABB
     bool intersects(const ray& r) const;
 };
+
 
 class BVHNode {
 public:
