@@ -190,24 +190,6 @@
                     "isrefractive": false,
                     "refractiveindex": 1.0
                 }
-            },
-            {
-                "type": "cylinder",
-                "center": [-0.3, 0.2, -0.5],
-                "axis": [0, 1, 0],
-                "radius": 0.4,
-                "height": 0.2,
-                "material": {
-                    "ks": 0.1,
-                    "kd": 0.9,
-                    "specularexponent": 15,
-                    "diffusecolor": [0.3, 0.6, 0.7],
-                    "specularcolor": [1.0, 1.0, 1.0],
-                    "isreflective": false,
-                    "reflectivity": 0.2,
-                    "isrefractive": false,
-                    "refractiveindex": 1.0
-                }
             }
         ]
     }

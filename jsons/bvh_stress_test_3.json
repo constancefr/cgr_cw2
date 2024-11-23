@@ -40,7 +40,7 @@
                     "isreflective": true,
                     "reflectivity": 0.4,
                     "isrefractive": true,
-                    "refractiveindex": 0.5
+                    "refractiveindex": 1
                 }
             },
             {
@@ -56,7 +56,7 @@
                     "isreflective": true,
                     "reflectivity": 0.4,
                     "isrefractive": true,
-                    "refractiveindex": 0.5
+                    "refractiveindex": 1
                 }
             },
             {
@@ -72,7 +72,7 @@
                     "isreflective": true,
                     "reflectivity": 0.4,
                     "isrefractive": true,
-                    "refractiveindex": 0.5
+                    "refractiveindex": 1
                 }
             },
             {
@@ -88,12 +88,12 @@
                     "isreflective": true,
                     "reflectivity": 0.4,
                     "isrefractive": true,
-                    "refractiveindex": 0.5
+                    "refractiveindex": 1
                 }
             },
             {
                 "type": "sphere",
-                "center": [-1.2, -0.9, 1.0],
+                "center": [-1.2, 0.5, 1.0],
                 "radius": 0.15,
                 "material": {
                     "ks": 0.2,
@@ -104,12 +104,12 @@
                     "isreflective": true,
                     "reflectivity": 0.4,
                     "isrefractive": true,
-                    "refractiveindex": 0.5
+                    "refractiveindex": 1
                 }
             },
             {
                 "type": "sphere",
-                "center": [-0.4, -0.9, 1.0],
+                "center": [-0.4, 0.5, 1.0],
                 "radius": 0.15,
                 "material": {
                     "ks": 0.2,
@@ -120,12 +120,12 @@
                     "isreflective": true,
                     "reflectivity": 0.4,
                     "isrefractive": true,
-                    "refractiveindex": 0.5
+                    "refractiveindex": 1
                 }
             },
             {
                 "type": "sphere",
-                "center": [0.4, -0.9, 1.0],
+                "center": [0.4, 0.5, 1.0],
                 "radius": 0.15,
                 "material": {
                     "ks": 0.2,
@@ -136,12 +136,12 @@
                     "isreflective": true,
                     "reflectivity": 0.4,
                     "isrefractive": true,
-                    "refractiveindex": 0.5
+                    "refractiveindex": 1
                 }
             },
             {
                 "type": "sphere",
-                "center": [1.2, -0.9, 1.0],
+                "center": [1.2, 0.5, 1.0],
                 "radius": 0.15,
                 "material": {
                     "ks": 0.2,
@@ -152,7 +152,155 @@
                     "isreflective": true,
                     "reflectivity": 0.4,
                     "isrefractive": true,
-                    "refractiveindex": 0.5
+                    "refractiveindex": 1
+                }
+            },
+
+            
+            {
+                "type": "sphere",
+                "center": [-0.8, 0.9, 1.0],
+                "radius": 0.15,
+                "material": {
+                    "ks": 0.2,
+                    "kd": 0.8,
+                    "specularexponent": 10,
+                    "diffusecolor": [0.40, 0.40, 0.45],
+                    "specularcolor": [1.0, 1.0, 1.0],
+                    "isreflective": true,
+                    "reflectivity": 0.4,
+                    "isrefractive": true,
+                    "refractiveindex": 1
+                }
+            },
+            {
+                "type": "sphere",
+                "center": [0.0, 0.9, 1.0],
+                "radius": 0.15,
+                "material": {
+                    "ks": 0.2,
+                    "kd": 0.8,
+                    "specularexponent": 10,
+                    "diffusecolor": [0.40, 0.40, 0.45],
+                    "specularcolor": [1.0, 1.0, 1.0],
+                    "isreflective": true,
+                    "reflectivity": 0.4,
+                    "isrefractive": true,
+                    "refractiveindex": 1
+                }
+            },
+            {
+                "type": "sphere",
+                "center": [0.8, 0.9, 1.0],
+                "radius": 0.15,
+                "material": {
+                    "ks": 0.2,
+                    "kd": 0.8,
+                    "specularexponent": 10,
+                    "diffusecolor": [0.40, 0.40, 0.45],
+                    "specularcolor": [1.0, 1.0, 1.0],
+                    "isreflective": true,
+                    "reflectivity": 0.4,
+                    "isrefractive": true,
+                    "refractiveindex": 1
+                }
+            },
+            {
+                "type": "sphere",
+                "center": [1.2, 0.9, 1.0],
+                "radius": 0.15,
+                "material": {
+                    "ks": 0.2,
+                    "kd": 0.8,
+                    "specularexponent": 10,
+                    "diffusecolor": [0.40, 0.40, 0.45],
+                    "specularcolor": [1.0, 1.0, 1.0],
+                    "isreflective": true,
+                    "reflectivity": 0.4,
+                    "isrefractive": true,
+                    "refractiveindex": 1
+                }
+            },
+            {
+                "type": "sphere",
+                "center": [-1.6, 0.5, 1.0],
+                "radius": 0.15,
+                "material": {
+                    "ks": 0.2,
+                    "kd": 0.8,
+                    "specularexponent": 10,
+                    "diffusecolor": [0.40, 0.40, 0.45],
+                    "specularcolor": [1.0, 1.0, 1.0],
+                    "isreflective": true,
+                    "reflectivity": 0.4,
+                    "isrefractive": true,
+                    "refractiveindex": 1
+                }
+            },
+            {
+                "type": "sphere",
+                "center": [-0.8, 0.5, 1.0],
+                "radius": 0.15,
+                "material": {
+                    "ks": 0.2,
+                    "kd": 0.8,
+                    "specularexponent": 10,
+                    "diffusecolor": [0.40, 0.40, 0.45],
+                    "specularcolor": [1.0, 1.0, 1.0],
+                    "isreflective": true,
+                    "reflectivity": 0.4,
+                    "isrefractive": true,
+                    "refractiveindex": 1
+                }
+            },
+            {
+                "type": "sphere",
+                "center": [0.0, 0.5, 1.0],
+                "radius": 0.15,
+                "material": {
+                    "ks": 0.2,
+                    "kd": 0.8,
+                    "specularexponent": 10,
+                    "diffusecolor": [0.40, 0.40, 0.45],
+                    "specularcolor": [1.0, 1.0, 1.0],
+                    "isreflective": true,
+                    "reflectivity": 0.4,
+                    "isrefractive": true,
+                    "refractiveindex": 1
+                }
+            },
+            {
+                "type": "sphere",
+                "center": [1.6, 0.5, 1.0],
+                "radius": 0.15,
+                "material": {
+                    "ks": 0.2,
+                    "kd": 0.8,
+                    "specularexponent": 10,
+                    "diffusecolor": [0.40, 0.40, 0.45],
+                    "specularcolor": [1.0, 1.0, 1.0],
+                    "isreflective": true,
+                    "reflectivity": 0.4,
+                    "isrefractive": true,
+                    "refractiveindex": 1
+                }
+            },
+
+
+            {
+                "type": "sphere",
+                "center": [-1.5, -1.2, 1.0],
+                "radius": 0.15,
+                "material": {
+                    "ks": 0.2,
+                    "kd": 0.8,
+                    "specularexponent": 10,
+                    "diffusecolor": [0.40, 0.40, 0.45],
+                    "specularcolor": [1.0, 1.0, 1.0],
+                    "isreflective": true,
+                    "reflectivity": 0.4,
+                    "isrefractive": true,
+                    "refractiveindex": 1
                 }
             }
         ]

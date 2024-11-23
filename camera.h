@@ -31,6 +31,9 @@ public:
     }
 
     ray get_ray(double u, double v) const {
+        // ray r(origin, upper_left_corner + horizontal * u - vertical * v - origin);
+        // r.inv_direction = r.calc_inv_direction();
+        // return r;
         return ray(origin, upper_left_corner + horizontal * u - vertical * v - origin);
     }
 };

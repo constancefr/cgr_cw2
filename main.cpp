@@ -122,6 +122,7 @@ int main(int argc, char* argv[]) {
         for (int i = 0; i < image_width; ++i) {
             auto [u, v] = normalize_pixel(i, j, image_width, image_height);
             ray r = camera.get_ray(u, v);
+            // r.inv_direction = r.calc_inv_direction();
 
             double t_hit;
             // double t_hit = max_t; // ??
