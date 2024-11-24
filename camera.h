@@ -18,13 +18,11 @@ public:
         double viewport_height = 2.0 * tan((fov * M_PI / 180.0) / 2.0); // Convert fov to radians
         double viewport_width = aspect_ratio * viewport_height;
 
-        vector3 forward = (lookAt - position).unit(); // unit vect pointing in viewing direction of camera (negative z-axis here) 
-        // vector3 right = forward.cross(upVector.unit()); // orthog to forward & up
-        vector3 right = upVector.unit().cross(forward); // Correct orientation? Goes towards left...
-        // vector3 up = right.cross(forward); // orthog to forward & right
+        vector3 forward = (lookAt - position).unit();
+        vector3 right = upVector.unit().cross(forward);
         vector3 up = forward.cross(right);
 
-        horizontal = right.unit() * viewport_width; // vector with direction = right and scale = viewport_width 
+        horizontal = right.unit() * viewport_width;
         vertical = up.unit() * viewport_height;
         upper_left_corner = origin + forward - horizontal / 2 + vertical / 2;
 

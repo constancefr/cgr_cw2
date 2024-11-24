@@ -123,13 +123,22 @@ vector3 Scene::shade(
     switch (render_mode) {
         // TODO!!
         case RenderMode::Binary:
-            return vector3(1.0, 0.0, 0.0); // red
+            return shade_binary(r);
         case RenderMode::BlinnPhong:
-            // return shade_blinn_phong(r, hit_point, normal, hit_shape, depth);
             return shade_blinn_phong(r, nbounces);
         default:
             throw std::runtime_error("Unsupported render mode.");
     }
+}
+
+// shade_binary: simple binary shading
+vector3 Scene::shade_binary(const ray& r) const {
+    double t_hit;
+    std::shared_ptr<Shape> hit_shape;
+    if (!intersects(r, t_hit, hit_shape, std::numeric_limits<double>::max())) {
+        return vector3(0.0, 0.0, 0.0); // black
+    }
+    return vector3(1.0, 0.0, 0.0); // red
 }
 
 vector3 Scene::shade_blinn_phong(const ray& r, int nbounces) const {

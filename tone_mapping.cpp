@@ -17,7 +17,3 @@ vector3 aces_tone_mapping(const vector3& color) {
     const float e = 0.14f;
     return (color * (a * color + b)) / (color * (c * color + d) + e);
 }
-
-// vector3 gamma_correction(const vector3& color, float gamma) {
-//     return vector3(pow(color.x, gamma), pow(color.y, gamma), pow(color.z, gamma));
-// }

@@ -120,6 +120,8 @@ public:
         int nbounces
     ) const;
 
+    vector3 shade_binary(const ray& r) const;
+
     vector3 shade_blinn_phong(const ray& r, int nbounces) const;
 
     vector3 compute_refraction(

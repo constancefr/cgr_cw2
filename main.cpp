@@ -87,7 +87,6 @@ int main(int argc, char* argv[]) {
     }
 
     json config = load_json(argv[1]);
-    // if config has nbounces, parse it and assign it to nbounces
     int nbounces = config.contains("nbounces") ? config["nbounces"].get<int>() : 8;
     auto camera_json = config["camera"];
     auto scene_json = config["scene"];
@@ -158,7 +157,7 @@ int main(int argc, char* argv[]) {
     // Render image
     const int image_width = camera_json["width"];
     const int image_height = camera_json["height"];
-    std::ofstream outfile("images/image.ppm");
+    std::ofstream outfile("rendered_image.ppm");
     if (!outfile.is_open()) {
         std::cerr << "Error: Could not open output file.\n";
         return 1;

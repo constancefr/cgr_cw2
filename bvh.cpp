@@ -29,7 +29,6 @@ bool AABB::intersects(const ray& r) const {
     return true;
 }
 
-
 BVHNode::BVHNode(const std::vector<std::shared_ptr<Shape>>& shapes) {
     // Calculate the bounding box for all shapes in the list
     for (const auto& shape : shapes) {
@@ -86,36 +85,6 @@ size_t AABB::largest_empty_axis(const std::vector<std::shared_ptr<Shape>>& shape
     return 2;                                                      // Z-axis
 }
 
-/* This function does not use the largest empty space in the scene to pick the axis along which to split. */
-/*
-size_t AABB::largest_empty_axis(const std::vector<std::shared_ptr<Shape>>& shapes) const {
-    // Compute the centroid of all bounding boxes in the scene
-    vector3 centroid(0.0, 0.0, 0.0);
-    for (const auto& shape : shapes) {
-        AABB bbox = shape->get_bbox();
-        vector3 center = (bbox.min + bbox.max) * 0.5;  // Centroid of the bounding box
-        centroid += center;  // Accumulate centroids
-    }
-    centroid = centroid * (1.0 / shapes.size());  // Average to get the scene's centroid
-
-    // Compute the extent (empty space) on each axis (X, Y, Z)
-    double empty_x = 0.0, empty_y = 0.0, empty_z = 0.0;
-    for (const auto& shape : shapes) {
-        AABB bbox = shape->get_bbox();
-        // Calculate the empty space relative to the centroid for each axis
-        empty_x = std::max(empty_x, std::abs((bbox.min.x + bbox.max.x) * 0.5 - centroid.x));
-        empty_y = std::max(empty_y, std::abs((bbox.min.y + bbox.max.y) * 0.5 - centroid.y));
-        empty_z = std::max(empty_z, std::abs((bbox.min.z + bbox.max.z) * 0.5 - centroid.z));
-    }
-
-    // Compare the "empty" space and choose the axis with the largest gap
-    if (empty_x > empty_y && empty_x > empty_z) return 0;  // X-axis
-    if (empty_y > empty_z) return 1;                       // Y-axis
-    return 2;                                              // Z-axis
-}
-*/
-
-
 std::shared_ptr<BVHNode> BVH::build_tree(const std::vector<std::shared_ptr<Shape>>& shapes) {
     // Base case: create a leaf node for 4 or fewer shapes
     if (shapes.size() <= 2) {
@@ -129,10 +98,8 @@ std::shared_ptr<BVHNode> BVH::build_tree(const std::vector<std::shared_ptr<Shape
     }
 
     // Step 2: Determine the axis with the largest extent
-    // size_t axis = centroid_bbox.largest_extent_axis();
     size_t axis = centroid_bbox.largest_empty_axis(shapes);
 
-    // print axis
     // std::cout << "Axis over which we split: " << axis << std::endl;
 
     // Step 3: Calculate the spatial midpoint along the chosen axis
@@ -164,32 +131,6 @@ std::shared_ptr<BVHNode> BVH::build_tree(const std::vector<std::shared_ptr<Shape
     // Step 6: Recursively build the left and right subtrees
     return std::make_shared<BVHNode>(build_tree(left_shapes), build_tree(right_shapes));
 }
-
-/*
-std::shared_ptr<BVHNode> BVH::build_tree(const std::vector<std::shared_ptr<Shape>>& shapes) {
-    // If there is only one shape, create a leaf node
-    if (shapes.size() <= 1) {
-        return std::make_shared<BVHNode>(shapes);  // Leaf node with shapes
-    }
-
-    // Split shapes into two halves based on a chosen axis (X, Y, Z)
-    size_t axis = rand() % 3;  // Random axis, or use other strategies like SAH for efficiency
-    std::vector<std::shared_ptr<Shape>> left_shapes, right_shapes;
-
-    // Sort shapes based on the selected axis (e.g., median split)
-    std::vector<std::shared_ptr<Shape>> sorted_shapes = shapes;
-    std::sort(sorted_shapes.begin(), sorted_shapes.end(), [axis](const std::shared_ptr<Shape>& a, const std::shared_ptr<Shape>& b) {
-        return a->get_bbox().min[axis] < b->get_bbox().min[axis];
-    });
-
-    size_t mid = sorted_shapes.size() / 2;
-    left_shapes = std::vector<std::shared_ptr<Shape>>(sorted_shapes.begin(), sorted_shapes.begin() + mid);
-    right_shapes = std::vector<std::shared_ptr<Shape>>(sorted_shapes.begin() + mid, sorted_shapes.end());
-
-    // Recursively build the left and right subtrees
-    return std::make_shared<BVHNode>(build_tree(left_shapes), build_tree(right_shapes));
-}
-*/
 
 bool BVH::intersects(const ray& r, double& t_hit, std::shared_ptr<Shape>& hit_shape, double max_t) const {
     // Start at root and recursively check for intersections
@@ -235,51 +176,3 @@ bool BVH::intersects_node(const ray& r, double& t_hit, std::shared_ptr<Shape>& h
 
     return false;
 }
-
-/*
-bool BVH::intersects_node(const ray& r, double& t_hit, std::shared_ptr<Shape>& hit_shape, double max_t, const std::shared_ptr<BVHNode>& node) const {
-    // Check if the ray intersects the bounding box
-    if (!node->bbox.intersects(r)) return false;
-
-    if (node->is_leaf()) {
-        bool hit = false;
-        double closest_t = max_t;
-        for (const auto& shape : node->primitives) {
-            double t = 0;
-            // Check intersection with epsilon (1e-4) and update only if it's closer
-            if (shape->intersects(r, t) && t < closest_t && t > 1e-4) {
-                t_hit = t;
-                closest_t = t;
-                hit = true;
-                hit_shape = shape;
-            }
-        }
-        return hit;
-    }
-
-    // Recursively check the left and right children
-    bool hit_left = false, hit_right = false;
-    double left_t_hit = t_hit, right_t_hit = t_hit; // Local t_hit values
-    std::shared_ptr<Shape> left_hit_shape = nullptr, right_hit_shape = nullptr;
-
-    if (node->left) {
-        hit_left = intersects_node(r, left_t_hit, hit_shape, max_t, node->left);
-    }
-
-    if (node->right) {
-        hit_right = intersects_node(r, right_t_hit, hit_shape, max_t, node->right);
-    }
-
-    // Compare and update `t_hit` and `hit_shape` based on the closest hit
-    if (hit_left && left_t_hit < t_hit) {
-        t_hit = left_t_hit;
-        hit_shape = left_hit_shape;
-    }
-    if (hit_right && right_t_hit < t_hit) {
-        t_hit = right_t_hit;
-        hit_shape = right_hit_shape;
-    }
-
-    return hit_left || hit_right;
-}
-*/
