@@ -10,7 +10,7 @@
 #include "sphere.h"
 #include "triangle.h"
 #include "cylinder.h"
-#include "libs/json.hpp"
+#include "json.hpp"
 
 enum class LightType {
     Point,

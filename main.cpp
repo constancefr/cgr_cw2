@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <random>
-#include "libs/json.hpp"
+#include "json.hpp"
 #include "vector3.h"
 #include "colour.h"
 #include "ray.h"
@@ -87,7 +87,8 @@ int main(int argc, char* argv[]) {
     }
 
     json config = load_json(argv[1]);
-    // int nbounces = config["nbounces"];
+    // if config has nbounces, parse it and assign it to nbounces
+    int nbounces = config.contains("nbounces") ? config["nbounces"].get<int>() : 8;
     auto camera_json = config["camera"];
     auto scene_json = config["scene"];
     
@@ -166,7 +167,7 @@ int main(int argc, char* argv[]) {
 
     auto start_time = std::chrono::high_resolution_clock::now();
 
-    render(scene, camera, image_width, image_height, 8, samples_per_pixel, tone_mapping, outfile);
+    render(scene, camera, image_width, image_height, nbounces, samples_per_pixel, tone_mapping, outfile);
 
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_time = end_time - start_time;

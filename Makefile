@@ -1,42 +1,51 @@
 # Compiler and flags
-CXX = g++
-CXXFLAGS = -fdiagnostics-color=always -g -Wall
+ifeq ($(OS),Windows_NT)
+    # Windows-specific compiler and flags
+    CXX = g++
+    CXXFLAGS = -fdiagnostics-color=always -g -Wall
+    RM = del
+    EXE = .exe
+else
+    # Unix-like systems (Linux/macOS) compiler and flags
+    CXX = g++
+    CXXFLAGS = -fdiagnostics-color=always -g -Wall
+    RM = rm -f
+    EXE =
+endif
 
-# Define the name of the output executable
-TARGET = raytracer.exe
+# name of output executable
+TARGET = raytracer$(EXE)
 
-# Automatically find all .cpp files in the workspace
+# find all source files
 SRC = $(wildcard *.cpp)
 
-# Generate object files from source files
+# generate object files
 OBJ = $(SRC:.cpp=.o)
 
-# Default rule: build the executable
+# build the executable
 all: $(TARGET)
 
-# Rule to link object files into the executable
+# link object files into the executable
 $(TARGET): $(OBJ)
 	$(CXX) $(OBJ) -o $(TARGET)
 
-# Rule to compile each .cpp file into an .o file
+# compile source files into object files
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Clean up object files and the executable
 clean:
-	rm -f $(OBJ) $(TARGET)
+	$(RM) $(OBJ) $(TARGET)
 
-# Run the executable with arguments passed to make
+# run executable with arguments passed to make
 run: $(TARGET)
 	./$(TARGET) $(ARGS)
 
-# Optional debug build (can be invoked with `make debug`)
+# debug build (`make debug`)
 debug: CXXFLAGS += -DDEBUG -O0
 debug: $(TARGET)
 
-# Run in debug mode
+# run in debug mode
 run-debug: debug
 	./$(TARGET) $(ARGS)
 
-# Use `make run ARGS="arg1 arg2 arg3"` to pass arguments when running the executable
-
+# Use `make run ARGS="arg1 arg2 arg3 arg4"` to pass arguments when running the executable

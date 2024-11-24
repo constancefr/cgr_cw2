@@ -7,11 +7,6 @@
 #include "image.h"
 #include "vector3.h"
 
-// struct vector3 {
-//     double r, g, b;
-//     vector3(double red, double green, double blue) : r(red), g(green), b(blue) {}
-// };
-
 Image::Image(const std::string& file_path) {
     load_image(file_path);
 }

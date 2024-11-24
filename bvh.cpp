@@ -133,7 +133,7 @@ std::shared_ptr<BVHNode> BVH::build_tree(const std::vector<std::shared_ptr<Shape
     size_t axis = centroid_bbox.largest_empty_axis(shapes);
 
     // print axis
-    std::cout << "Axis over which we split: " << axis << std::endl;
+    // std::cout << "Axis over which we split: " << axis << std::endl;
 
     // Step 3: Calculate the spatial midpoint along the chosen axis
     double midpoint = 0.5 * (centroid_bbox.min[axis] + centroid_bbox.max[axis]);
