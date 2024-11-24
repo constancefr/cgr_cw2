@@ -29,8 +29,8 @@ json load_json(const std::string& filename) {
     return data;
 }
 
-void render(const Scene& scene, const Camera& camera, int image_width, int image_height, int max_depth, int samples_per_pixel, std::function<vector3(const vector3&)> tone_mapping, std::ofstream& outfile) {
-    #pragma omp parallel for schedule(dynamic)  // Parallelize rendering if OpenMP is available
+void render(const Scene& scene, const Camera& camera, int image_width, int image_height, int nbounces, int samples_per_pixel, std::function<vector3(const vector3&)> tone_mapping, std::ofstream& outfile) {
+    #pragma omp parallel for schedule(dynamic)
     for (int y = 0; y < image_height; ++y) {
         for (int x = 0; x < image_width; ++x) {
             vector3 pixel_color(0.0, 0.0, 0.0); // Final pixel color
@@ -49,7 +49,7 @@ void render(const Scene& scene, const Camera& camera, int image_width, int image
                     std::shared_ptr<Shape> hit_shape;
                     vector3 sample_color = scene.backgroundcolor; // default
 
-                    sample_color = scene.shade(r, 8);
+                    sample_color = scene.shade(r, nbounces);
                     pixel_color += sample_color; // Accumulate sample colors
                 }
 
@@ -65,7 +65,7 @@ void render(const Scene& scene, const Camera& camera, int image_width, int image
                 std::shared_ptr<Shape> hit_shape;
                 pixel_color = scene.backgroundcolor;
 
-                pixel_color = scene.shade(r, 8);
+                pixel_color = scene.shade(r, nbounces);
             }
 
             // Apply tone mapping and gamma correction

@@ -118,7 +118,7 @@ bool Scene::brute_force_intersects(const ray& r, double& t_hit, std::shared_ptr<
 
 vector3 Scene::shade(
     const ray& r, 
-    int depth
+    int nbounces
 ) const {
     switch (render_mode) {
         // TODO!!
@@ -126,13 +126,13 @@ vector3 Scene::shade(
             return vector3(1.0, 0.0, 0.0); // red
         case RenderMode::BlinnPhong:
             // return shade_blinn_phong(r, hit_point, normal, hit_shape, depth);
-            return shade_blinn_phong(r, depth);
+            return shade_blinn_phong(r, nbounces);
         default:
             throw std::runtime_error("Unsupported render mode.");
     }
 }
 
-vector3 Scene::shade_blinn_phong(const ray& r, int depth) const {
+vector3 Scene::shade_blinn_phong(const ray& r, int nbounces) const {
     double t_hit;
     std::shared_ptr<Shape> hit_shape;
     if (!intersects(r, t_hit, hit_shape, std::numeric_limits<double>::max())) {
@@ -141,7 +141,7 @@ vector3 Scene::shade_blinn_phong(const ray& r, int depth) const {
 
     vector3 hit_point = r.origin + t_hit * r.direction;
     vector3 normal = hit_shape->get_normal(hit_point);
-    return shade_surface(r, hit_point, normal, hit_shape->material, *hit_shape, depth);
+    return shade_surface(r, hit_point, normal, hit_shape->material, *hit_shape, nbounces);
 }
 
 vector3 Scene::shade_surface(
@@ -150,7 +150,7 @@ vector3 Scene::shade_surface(
     const vector3& normal,
     const Material& material,
     const Shape& shape,
-    int depth
+    int nbounces
 ) const {
     vector3 view_dir = -r.direction.unit();
 
@@ -158,11 +158,13 @@ vector3 Scene::shade_surface(
     vector3 local_color = compute_blinn_phong(hit_point, normal, view_dir, material, shape);
 
     // Reflection
-    vector3 reflection_color = compute_reflection(r, hit_point, normal, material, depth);
+    // vector3 reflection_color = compute_reflection(r, hit_point, normal, material, nbounces);
+    vector3 reflection_color = compute_reflection(r, hit_point, normal, material, nbounces - 1);
 
     // Refraction (if implemented)
     vector3 refraction_color = material.isrefractive
-        ? compute_refraction(r, hit_point, normal, material, depth)
+        // ? compute_refraction(r, hit_point, normal, material, nbounces)
+        ? compute_refraction(r, hit_point, normal, material, nbounces - 1)
         : vector3(0.0, 0.0, 0.0);
 
     // Combine components
@@ -235,7 +237,7 @@ double Scene::compute_shadow_factor(const vector3& point, const vector3& light_p
     double t_shadow;
     std::shared_ptr<Shape> shadow_hit_shape;
     if (intersects(shadow_ray, t_shadow, shadow_hit_shape, (light_position - point).length())) {
-        return 0.0; // In shadow
+        return 0.1; // In shadow
     }
     return 1.0; // Fully lit
 }
@@ -245,14 +247,14 @@ vector3 Scene::compute_reflection(
     const vector3& hit_point,
     const vector3& normal,
     const Material& material,
-    int depth
+    int nbounces
 ) const {
-    if (depth <= 0 || !material.isreflective) return vector3(0.0, 0.0, 0.0);
+    if (nbounces <= 0 || !material.isreflective) return vector3(0.0, 0.0, 0.0);
 
     vector3 reflect_dir = r.direction - 2 * (normal.dot(r.direction)) * normal;
     ray reflect_ray(hit_point + reflect_dir * 0.001, reflect_dir);
 
-    return shade_blinn_phong(reflect_ray, depth - 1) * material.reflectivity;
+    return shade_blinn_phong(reflect_ray, nbounces - 1) * material.reflectivity;
 }
 
 vector3 Scene::compute_refraction(
@@ -260,7 +262,7 @@ vector3 Scene::compute_refraction(
     const vector3& hit_point,
     const vector3& normal,
     const Material& material,
-    int depth
+    int nbounces
 ) const {
     // Refraction indices
     double eta = material.refractiveindex; // Refractive index of the material
@@ -301,7 +303,7 @@ vector3 Scene::compute_refraction(
     ray refracted_ray(hit_point + refract_dir * 1e-4, refract_dir); // Offset to avoid self-intersection
 
     // Calculate the refraction color by recursively shading the refracted ray
-    vector3 refraction_color = shade_blinn_phong(refracted_ray, depth + 1);
+    vector3 refraction_color = shade_blinn_phong(refracted_ray, nbounces + 1); // + 1 because we are entering a new medium??
 
     // Attenuate the refraction color by the material's transparency
     return refraction_color * material.transparency;

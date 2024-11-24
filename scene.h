@@ -89,7 +89,7 @@ public:
 
     vector3 shade(
         const ray& r, 
-        int depth
+        int nbounces
     ) const;
 
     vector3 compute_blinn_phong(
@@ -108,7 +108,7 @@ public:
         const vector3& hit_point,
         const vector3& normal,
         const Material& material,
-        int depth
+        int nbounces
     ) const;
 
     vector3 shade_surface(
@@ -117,17 +117,17 @@ public:
         const vector3& normal,
         const Material& material,
         const Shape& shape,
-        int depth
+        int nbounces
     ) const;
 
-    vector3 shade_blinn_phong(const ray& r, int depth) const;
+    vector3 shade_blinn_phong(const ray& r, int nbounces) const;
 
     vector3 compute_refraction(
         const ray& r_in,              // Incoming ray
         const vector3& hit_point,     // Point of intersection
         const vector3& normal,        // Surface normal
         const Material& material,     // Material of the hit object
-        int depth                     // Recursion depth
+        int nbounces                     // Recursion depth
     ) const;
 
     // KEPT IN NEW CPP
