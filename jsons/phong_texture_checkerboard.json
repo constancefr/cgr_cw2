@@ -21,6 +21,11 @@
                     "type":"pointlight", 
                     "position":[0, 1.0, 0.0], 
                     "intensity":[0.75, 0.75, 0.75] 
+                },
+                { 
+                    "type":"pointlight", 
+                    "position":[0, 10, 15], 
+                    "intensity":[0.75, 0.75, 0.75] 
                 }
             ], 
             "shapes":[ 
@@ -64,8 +69,8 @@
                 },
                 { 
                     "type":"triangle", 
-                    "v0": [ -1, -0.5, 20],
-                    "v1": [ 1, -0.5, 20],
+                    "v0": [ -1, -0.5, 10],
+                    "v1": [ 1, -0.5, 10],
                     "v2": [ 1, -0.5, 0],
                     "uv0": [0, 1],
                     "uv1": [1, 1],
@@ -81,13 +86,13 @@
                             "reflectivity":1.0,
                             "isrefractive":false,
                             "refractiveindex":1.0,
-                            "texture_file": "textures/checkerboard.jpg"
+                            "texture_file": "textures/grey_checkerboard.jpg"
                         } 
                 },
                 { 
                     "type":"triangle", 
                     "v0": [-1, -0.5, 0],
-                    "v1": [-1, -0.5, 20],
+                    "v1": [-1, -0.5, 10],
                     "v2": [1, -0.5, 0],
                     "uv0": [0, 0],
                     "uv1": [0, 1],
@@ -103,7 +108,7 @@
                             "reflectivity":1.0,
                             "isrefractive":false,
                             "refractiveindex":1.0,
-                            "texture_file": "textures/checkerboard.jpg"
+                            "texture_file": "textures/grey_checkerboard.jpg"
                         } 
                 }  
             ] 

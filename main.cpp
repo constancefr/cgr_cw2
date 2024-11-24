@@ -34,6 +34,8 @@ json load_json(const std::string& filename) {
 //     double v = double(j) / (image_height - 1); // Vertical coordinate (0.0 to 1.0)
 //     return {u, v};
 // }
+
+// Center normalised coordinates inside pixel
 std::pair<double, double> normalize_pixel(int i, int j, int width, int height) {
     return { (i + 0.5) / width, (j + 0.5) / height }; // Center pixel by default
 }
@@ -108,21 +110,24 @@ int main(int argc, char* argv[]) {
     }
 
     // Parse command-line argument for flags
-    if (argc > 2) {
-        std::string bvh_flag = argv[2];
-        if (bvh_flag == "--bvh") {
-            scene.use_bvh = true;
-        }
-        if (argc > 3) {
-            std::string antialiasing_flag = argv[3];
-            if (antialiasing_flag == "--antialiasing") {
-                scene.enable_antialiasing = true;
-            }
-            if (argc > 4) {
-                std::string samples_flag = argv[4];
-                int samples_per_pixel = std::stoi(samples_flag);
-            } else {
-                int samples_per_pixel = 4; // default
+    int samples_per_pixel = 4;        // Default samples per pixel
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+
+        if (arg == "--bvh") {
+            scene.use_bvh = true; // Enable BVH
+        } else if (arg == "--aa") {
+            scene.enable_antialiasing = true; // Enable antialiasing
+
+            // Check if a subsequent argument specifies the number of samples
+            if (i + 1 < argc) {
+                std::string next_arg = argv[i + 1];
+                try {
+                    samples_per_pixel = std::stoi(next_arg); // Parse samples count
+                    ++i; // Skip the parsed argument
+                } catch (std::invalid_argument&) {
+                    // Not a valid integer, keep default samples_per_pixel
+                }
             }
         }
     }
@@ -143,9 +148,6 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     outfile << "P3\n" << image_width << " " << image_height << "\n255\n";
-    std::cout << "PPM file header: \n" << "P3\n" << image_width << " " << image_height << "\n255\n";
-    
-    int samples_per_pixel = 16; // Adjust this for desired quality
 
     // Parse through each pixel
     for (int j = 0; j < image_height; ++j) {
@@ -176,7 +178,7 @@ int main(int argc, char* argv[]) {
                 }
 
                 // Average the accumulated color
-                vector3 pixel_color = pixel_color / samples_per_pixel;
+                pixel_color = pixel_color / (samples_per_pixel);
                 
             } else {
                 // No antialiasing: Single ray per pixel
@@ -210,6 +212,7 @@ int main(int argc, char* argv[]) {
 
     std::cout << "Render completed in: " << elapsed_time.count() << " seconds.\n";
     std::cout << "BVH enabled: " << (scene.use_bvh ? "Yes" : "No") << "\n";
+    std::cout << "Antialiasing applied: " << (scene.enable_antialiasing ? "Yes" : "No") << "\n";
 
     outfile.close();
     
