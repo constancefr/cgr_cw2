@@ -1,4 +1,5 @@
 #include "scene.h"
+#include "utils.h"
 
 // Helper function to parse materials
 Material parse_material(const nlohmann::json& material_json) {
@@ -112,6 +113,7 @@ bool Scene::brute_force_intersects(const ray& r, double& t_hit, std::shared_ptr<
     return hit;
 }
 
+
 /* --------------- Shading / reflection / refraction functions --------------- */
 
 vector3 Scene::shade(
@@ -182,33 +184,57 @@ vector3 Scene::compute_blinn_phong(
         : material.diffusecolor;
 
     for (const auto& light : lights) {
-        // Shadow factor
-        double shadow_factor = compute_shadow_factor(point, light);
+        if (light.type == LightType::Point) {
+            vector3 light_dir = (light.position - point).unit();
+            vector3 half_vector = (view_dir + light_dir).unit();
 
-        vector3 light_dir = (light.position - point).unit();
-        vector3 half_vector = (view_dir + light_dir).unit();
+            double diff = std::max(0.0, normal.dot(light_dir));
+            vector3 diffuse = material.kd * diff * texture_color * light.intensity;
 
-        // Diffuse component
-        double diff = std::max(0.0, normal.dot(light_dir));
-        vector3 diffuse = material.kd * diff * texture_color * light.intensity;
+            double spec = std::pow(std::max(0.0, normal.dot(half_vector)), material.specularexponent);
+            vector3 specular = material.ks * spec * material.specularcolor * light.intensity;
 
-        // Specular component
-        double spec = std::pow(std::max(0.0, normal.dot(half_vector)), material.specularexponent);
-        vector3 specular = material.ks * spec * material.specularcolor * light.intensity;
+            double shadow_factor = compute_shadow_factor(point, light.position);
 
-        color += shadow_factor * (diffuse + specular);
+            color += shadow_factor * (diffuse + specular);
+
+        } else if (light.type == LightType::Area) {
+            int num_samples = 16; // Adjust for quality vs. performance
+            vector3 area_color(0.0, 0.0, 0.0);
+
+            for (int i = 0; i < num_samples; ++i) {
+                vector3 sample_point = light.sample_point_on_surface(); // random sample
+                vector3 light_dir = (sample_point - point).unit();
+
+                // Shadow factor
+                double shadow_factor = compute_shadow_factor(point, sample_point);
+
+                // Diffuse component
+                double diff = std::max(0.0, normal.dot(light_dir));
+                vector3 diffuse = material.kd * diff * texture_color * light.intensity / num_samples;
+
+                // Specular component
+                vector3 half_vector = (view_dir + light_dir).unit();
+                double spec = std::pow(std::max(0.0, normal.dot(half_vector)), material.specularexponent);
+                vector3 specular = material.ks * spec * material.specularcolor * light.intensity / num_samples;
+
+                area_color += shadow_factor * (diffuse + specular);
+            }
+            color += area_color;
+        }
+        
     }
 
     return color;
 }
 
-double Scene::compute_shadow_factor(const vector3& point, const Light& light) const {
-    vector3 light_dir = (light.position - point).unit();
+double Scene::compute_shadow_factor(const vector3& point, const vector3& light_position) const {
+    vector3 light_dir = (light_position - point).unit();
     ray shadow_ray(point + light_dir * 0.001, light_dir); // Offset to avoid self-intersection
 
     double t_shadow;
     std::shared_ptr<Shape> shadow_hit_shape;
-    if (intersects(shadow_ray, t_shadow, shadow_hit_shape, (light.position - point).length())) {
+    if (intersects(shadow_ray, t_shadow, shadow_hit_shape, (light_position - point).length())) {
         return 0.0; // In shadow
     }
     return 1.0; // Fully lit
@@ -279,4 +305,14 @@ vector3 Scene::compute_refraction(
 
     // Attenuate the refraction color by the material's transparency
     return refraction_color * material.transparency;
+}
+
+// Randomly sample a point on the surface of the area light
+vector3 Light::sample_point_on_surface() const {
+    if (type != LightType::Area) {
+        throw std::runtime_error("Sampling only supported for area lights");
+    }
+    double rand_u = random_double(0.0, 1.0);
+    double rand_v = random_double(0.0, 1.0);
+    return position + (rand_u * width * u) + (rand_v * height * v);
 }

@@ -1,13 +1,13 @@
--- COPILOT -- 
-Area Light Sampling:
+// -- COPILOT -- 
+// Area Light Sampling:
 
-For area lights, generate multiple sample points on the light's surface using random values for u and v.
-Calculate the direction to each sample point and the halfway vector.
-Compute the diffuse and specular contributions for each sample point.
-Accumulate the contributions and average them by dividing by the number of samples.
-Point Light:
+// For area lights, generate multiple sample points on the light's surface using random values for u and v.
+// Calculate the direction to each sample point and the halfway vector.
+// Compute the diffuse and specular contributions for each sample point.
+// Accumulate the contributions and average them by dividing by the number of samples.
+// Point Light:
 
-For point lights, compute the lighting contributions as before.
+// For point lights, compute the lighting contributions as before.
 
 vector3 Scene::compute_blinn_phong(
     const vector3& point,
@@ -76,9 +76,9 @@ vector3 Scene::compute_blinn_phong(
     return color;
 }
 
------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------
 
--- CHATGPT -- (better?)
+// -- CHATGPT -- (better?)
 
 vector3 Scene::sample_area_light(const Light& light) const {
     // Sample a random point on the surface of the area light

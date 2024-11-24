@@ -11,6 +11,7 @@
 #include "triangle.h"
 #include "cylinder.h"
 #include "tone_mapping.h"
+#include "utils.h"
 
 using json = nlohmann::json;
 
@@ -27,21 +28,6 @@ json load_json(const std::string& filename) {
     
     return data;
 }
-
-/* --------------- Utils --------------- */
-
-// Center normalised coordinates inside pixel
-std::pair<double, double> normalize_pixel(int i, int j, int width, int height) {
-    return { (i + 0.5) / width, (j + 0.5) / height }; // Center pixel by default
-}
-
-double random_double(double min, double max) {
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis(min, max);
-    return dis(gen);
-}
-/* ------------------------------------- */
 
 void render(const Scene& scene, const Camera& camera, int image_width, int image_height, int max_depth, int samples_per_pixel, std::function<vector3(const vector3&)> tone_mapping, std::ofstream& outfile) {
     #pragma omp parallel for schedule(dynamic)  // Parallelize rendering if OpenMP is available

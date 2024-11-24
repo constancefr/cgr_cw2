@@ -25,7 +25,10 @@ struct Light {
     vector3 v; // v-axis for area light
     double width;
     double height;
+    
+    vector3 sample_point_on_surface() const;
 };
+
 
 enum class RenderMode {
         Binary,
@@ -47,7 +50,6 @@ public:
     RenderMode parse_render_mode(const std::string& mode_str) {
         if (mode_str == "binary") return RenderMode::Binary;
         return RenderMode::BlinnPhong;
-        // throw std::invalid_argument("Unknown render mode: " + mode_str);
     }
 
     void set_render_mode(RenderMode mode) {
@@ -56,7 +58,6 @@ public:
 
     Scene(const vector3& background_color) : backgroundcolor(background_color) {}
 
-    // Load scene from JSON configuration
     void load_from_json(const nlohmann::json& scene_json);
 
     void add_shape(const std::shared_ptr<Shape>& shape) {
@@ -78,31 +79,16 @@ public:
         if (use_bvh) {
             return bvh->intersects(r, t_hit, hit_shape, max_t);
         }
-        // Brute force: iterate over all shapes in the scene and checks for intersections with the given ray.
         return brute_force_intersects(r, t_hit, hit_shape, max_t);
     }
 
     bool brute_force_intersects(const ray& r, double& t_hit, std::shared_ptr<Shape>& hit_shape, double max_t) const;
-    // bool intersects(const ray& r, double& t_hit, std::shared_ptr<Shape>& hit_shape, double max_t) const;
 
 
     /* --------------- Shading / reflection / refraction --------------- */
 
-    // KEEP?
-    // vector3 shade(const ray& r, const vector3& hit_point, const vector3& normal, const Shape& hit_shape, int depth) const;
-    
-    // ADD INTO NEW CPP!
-    // vector3 shade_binary(const ray& r, const vector3& hit_point, const vector3& normal, const Shape& hit_shape, int depth) const;
-
-    // KEEP?
-    // vector3 shade_blinn_phong(const ray& r, const vector3& hit_point, const vector3& normal, const Shape& hit_shape, int depth) const;
-
     vector3 shade(
         const ray& r, 
-        // const vector3& hit_point, 
-        // const vector3& normal, 
-        // const Shape& hit_shape,
-        // const Material& material, 
         int depth
     ) const;
 
@@ -114,7 +100,8 @@ public:
         const Shape& shape
     ) const;
 
-    double compute_shadow_factor(const vector3& point, const Light& light) const;
+    double compute_shadow_factor(const vector3& point, const vector3& light_position) const;
+    // double compute_shadow_factor(const vector3& point, const Light& light) const;
 
     vector3 compute_reflection(
         const ray& r,
