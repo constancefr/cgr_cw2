@@ -1,8 +1,4 @@
 #include "scene.h"
-// #include "shape.h"
-// #include "sphere.h"
-// #include "triangle.h"
-// #include "cylinder.h"
 
 // Helper function to parse materials
 Material parse_material(const nlohmann::json& material_json) {
@@ -20,8 +16,37 @@ Material parse_material(const nlohmann::json& material_json) {
 }
 
 void Scene::load_from_json(const nlohmann::json& scene_json) {
+    // Set render mode
+    if (scene_json.contains("rendermode")) {
+        render_mode = parse_render_mode(scene_json["rendermode"]);
+    } else {
+        render_mode = RenderMode::Binary;
+    }
+    set_render_mode(render_mode);
+
     // Set background color
     backgroundcolor = vector3(scene_json["backgroundcolor"][0], scene_json["backgroundcolor"][1], scene_json["backgroundcolor"][2]);
+
+    // Add lights
+    if (scene_json.contains("lightsources")) {
+        for (const auto& light_data : scene_json["lightsources"]) {
+            Light light;
+            light.position = vector3(light_data["position"][0], light_data["position"][1], light_data["position"][2]);
+            light.intensity = vector3(light_data["intensity"][0], light_data["intensity"][1], light_data["intensity"][2]);
+
+            if (light_data["type"] == "pointlight") {
+                light.type = LightType::Point;
+            } else if (light_data["type"] == "arealight") {
+                light.type = LightType::Area;
+                light.u = vector3(light_data["u"][0], light_data["u"][1], light_data["u"][2]).unit();
+                light.v = vector3(light_data["v"][0], light_data["v"][1], light_data["v"][2]).unit();
+                light.width = light_data["width"];
+                light.height = light_data["height"];
+            }
+
+            add_light(light);
+        }
+    }
 
     // Add shapes
     for (const auto& shape_data : scene_json["shapes"]) {
@@ -57,8 +82,6 @@ void Scene::load_from_json(const nlohmann::json& scene_json) {
         }
 
         if (shape) {
-
-
             // Load texture to the shape's material if available
             if (shape_data.contains("material") && shape_data["material"].contains("texture_file")) {
                 std::string texture_file = shape_data["material"]["texture_file"];
@@ -89,39 +112,106 @@ bool Scene::brute_force_intersects(const ray& r, double& t_hit, std::shared_ptr<
     return hit;
 }
 
+/* --------------- Shading / reflection / refraction functions --------------- */
+
+vector3 Scene::shade(
+    const ray& r, 
+    int depth
+) const {
+    switch (render_mode) {
+        // TODO!!
+        case RenderMode::Binary:
+            return vector3(1.0, 0.0, 0.0); // red
+        case RenderMode::BlinnPhong:
+            // return shade_blinn_phong(r, hit_point, normal, hit_shape, depth);
+            return shade_blinn_phong(r, depth);
+        default:
+            throw std::runtime_error("Unsupported render mode.");
+    }
+}
+
+vector3 Scene::shade_blinn_phong(const ray& r, int depth) const {
+    double t_hit;
+    std::shared_ptr<Shape> hit_shape;
+    if (!intersects(r, t_hit, hit_shape, std::numeric_limits<double>::max())) {
+        return backgroundcolor; // No intersection, return background color
+    }
+
+    vector3 hit_point = r.origin + t_hit * r.direction;
+    vector3 normal = hit_shape->get_normal(hit_point);
+    return shade_surface(r, hit_point, normal, hit_shape->material, *hit_shape, depth);
+}
+
+vector3 Scene::shade_surface(
+    const ray& r,
+    const vector3& hit_point,
+    const vector3& normal,
+    const Material& material,
+    const Shape& shape,
+    int depth
+) const {
+    vector3 view_dir = -r.direction.unit();
+
+    // Local shading
+    vector3 local_color = compute_blinn_phong(hit_point, normal, view_dir, material, shape);
+
+    // Reflection
+    vector3 reflection_color = compute_reflection(r, hit_point, normal, material, depth);
+
+    // Refraction (if implemented)
+    vector3 refraction_color = material.isrefractive
+        ? compute_refraction(r, hit_point, normal, material, depth)
+        : vector3(0.0, 0.0, 0.0);
+
+    // Combine components
+    return local_color + reflection_color + refraction_color;
+}
+
 vector3 Scene::compute_blinn_phong(
     const vector3& point,
-    const vector3& normal,          // Surface normal at the point
-    const vector3& view_dir,        // Direction from point to camera
+    const vector3& normal,
+    const vector3& view_dir,
     const Material& material,
     const Shape& shape
 ) const {
     vector3 color(0.0, 0.0, 0.0);
 
     auto uv = shape.get_uv(point);
-
     vector3 texture_color = material.texture
         ? material.texture->get_color_at_uv(uv.first, uv.second)
-        : material.diffusecolor; // Default to diffuse color if no texture is present
+        : material.diffusecolor;
 
     for (const auto& light : lights) {
-        // Calculate vectors
-        vector3 light_dir = (light.position - point).unit(); // Direction to the light
-        vector3 half_vector = (view_dir + light_dir).unit(); // Halfway vector
+        // Shadow factor
+        double shadow_factor = compute_shadow_factor(point, light);
 
-        // Diffuse contribution
+        vector3 light_dir = (light.position - point).unit();
+        vector3 half_vector = (view_dir + light_dir).unit();
+
+        // Diffuse component
         double diff = std::max(0.0, normal.dot(light_dir));
         vector3 diffuse = material.kd * diff * texture_color * light.intensity;
 
-        // Specular contribution
+        // Specular component
         double spec = std::pow(std::max(0.0, normal.dot(half_vector)), material.specularexponent);
         vector3 specular = material.ks * spec * material.specularcolor * light.intensity;
 
-        // Accumulate contributions
-        color += diffuse + specular;
+        color += shadow_factor * (diffuse + specular);
     }
 
     return color;
+}
+
+double Scene::compute_shadow_factor(const vector3& point, const Light& light) const {
+    vector3 light_dir = (light.position - point).unit();
+    ray shadow_ray(point + light_dir * 0.001, light_dir); // Offset to avoid self-intersection
+
+    double t_shadow;
+    std::shared_ptr<Shape> shadow_hit_shape;
+    if (intersects(shadow_ray, t_shadow, shadow_hit_shape, (light.position - point).length())) {
+        return 0.0; // In shadow
+    }
+    return 1.0; // Fully lit
 }
 
 vector3 Scene::compute_reflection(
@@ -131,193 +221,62 @@ vector3 Scene::compute_reflection(
     const Material& material,
     int depth
 ) const {
-    if (depth <= 0 || !material.isreflective) {
+    if (depth <= 0 || !material.isreflective) return vector3(0.0, 0.0, 0.0);
+
+    vector3 reflect_dir = r.direction - 2 * (normal.dot(r.direction)) * normal;
+    ray reflect_ray(hit_point + reflect_dir * 0.001, reflect_dir);
+
+    return shade_blinn_phong(reflect_ray, depth - 1) * material.reflectivity;
+}
+
+vector3 Scene::compute_refraction(
+    const ray& r,
+    const vector3& hit_point,
+    const vector3& normal,
+    const Material& material,
+    int depth
+) const {
+    // Refraction indices
+    double eta = material.refractiveindex; // Refractive index of the material
+    double eta_inv = 1.0 / eta;
+
+    // Compute the unit direction of the incident ray
+    vector3 incident_dir = r.direction.unit();
+
+    // Cosine of the angle between the incident ray and the surface normal
+    double cos_theta_i = -normal.dot(incident_dir);
+
+    // Determine if the ray is entering or exiting the medium
+    vector3 refract_normal = normal;
+    if (cos_theta_i < 0.0) {
+        // Exiting the medium
+        cos_theta_i = -cos_theta_i;
+        refract_normal = -normal;
+        eta = eta_inv;
+    }
+
+    // Calculate the sine squared of the refracted angle using Snell's Law
+    double sin2_theta_t = eta * eta * (1.0 - cos_theta_i * cos_theta_i);
+
+    // Check for total internal reflection (TIR)
+    if (sin2_theta_t > 1.0) {
+        // TIR occurs; no refraction, return black color
         return vector3(0.0, 0.0, 0.0);
     }
 
-    // Ideal reflection direction
-    vector3 reflect_dir = r.direction - 2 * (normal.dot(r.direction)) * normal;
+    // Calculate the cosine of the refracted angle
+    double cos_theta_t = sqrt(1.0 - sin2_theta_t);
 
-    // Glossy reflection parameters
-    double spread = 1.0 / material.specularexponent; // Spread inversely proportional to specular exponent
-    int sample_count = 16;                           // Number of samples for averaging
-    vector3 accumulated_color(0.0, 0.0, 0.0);
+    // Compute the refracted direction
+    vector3 refract_dir = eta * incident_dir + (eta * cos_theta_i - cos_theta_t) * refract_normal;
+    refract_dir = refract_dir.unit();
 
-    for (int i = 0; i < sample_count; ++i) {
-        // Generate a random perturbation around the reflection direction
-        vector3 scattered_dir = reflect_dir.random_perturbation(normal, spread);
+    // Generate the refracted ray
+    ray refracted_ray(hit_point + refract_dir * 1e-4, refract_dir); // Offset to avoid self-intersection
 
-        // Create a perturbed reflection ray
-        ray scattered_ray(hit_point + scattered_dir * 0.001, scattered_dir);
+    // Calculate the refraction color by recursively shading the refracted ray
+    vector3 refraction_color = shade_blinn_phong(refracted_ray, depth + 1);
 
-        // Check for intersection of the scattered reflection ray
-        double t_hit_scattered;
-        std::shared_ptr<Shape> hit_shape_scattered;
-
-        if (intersects(scattered_ray, t_hit_scattered, hit_shape_scattered, std::numeric_limits<double>::max())) {
-            // Get the hit point and normal at the intersection
-            vector3 hit_point_scattered = scattered_ray.origin + t_hit_scattered * scattered_ray.direction;
-            vector3 normal_scattered = hit_shape_scattered->get_normal(hit_point_scattered);
-
-            // Calculate UV coordinates for the reflection point
-            auto uv = hit_shape_scattered->get_uv(hit_point_scattered);
-
-            // Sample the texture color if a texture exists
-            vector3 texture_color = hit_shape_scattered->material.texture
-                ? hit_shape_scattered->material.texture->get_color_at_uv(uv.first, uv.second)
-                : hit_shape_scattered->material.diffusecolor;
-
-            // Compute the shadow factor for this point
-            double shadow_factor = 1.0; // Default: fully lit
-            for (const auto& light : lights) {
-                // Shadow ray direction and offset origin to avoid self-intersection
-                vector3 light_dir = (light.position - hit_point_scattered).unit();
-                ray shadow_ray(hit_point_scattered + light_dir * 0.001, light_dir);
-
-                // Check if the shadow ray is blocked
-                double t_shadow;
-                std::shared_ptr<Shape> shadow_hit_shape;
-                if (intersects(shadow_ray, t_shadow, shadow_hit_shape, (light.position - hit_point_scattered).length())) {
-                    shadow_factor = 0.0; // Fully in shadow
-                    break; // No need to test other lights for this point
-                }
-            }
-
-            // Compute the color at the reflection hit point
-            vector3 view_dir_scattered = -scattered_ray.direction.unit();
-            vector3 scattered_color = compute_blinn_phong(hit_point_scattered, normal_scattered, view_dir_scattered, hit_shape_scattered->material, *hit_shape_scattered);
-
-            // Blend the texture color into the scattered reflection color
-            vector3 final_color = texture_color * hit_shape_scattered->material.kd + scattered_color * hit_shape_scattered->material.ks;
-
-            accumulated_color += final_color * shadow_factor;
-        }
-    }
-
-    // Average the accumulated color
-    vector3 averaged_color = accumulated_color / static_cast<double>(sample_count);
-
-    // Combine the averaged reflection color with reflectivity
-    return averaged_color * material.reflectivity;
+    // Attenuate the refraction color by the material's transparency
+    return refraction_color * material.transparency;
 }
-
-
-vector3 Scene::compute_refracted_direction(
-    const vector3& incident,  // Incident ray direction (normalized)
-    const vector3& normal,    // Surface normal at the point of intersection
-    double ior_in,            // Refractive index of the medium the ray is coming from
-    double ior_out            // Refractive index of the medium the ray is entering
-) const {
-    double cos_theta_i = -incident.dot(normal); // Angle of incidence
-    double eta = ior_in / ior_out;              // Ratio of refractive indices
-    double sin2_theta_t = eta * eta * (1.0 - cos_theta_i * cos_theta_i);
-
-    // Check for total internal reflection
-    if (sin2_theta_t > 1.0) {
-        return vector3(0.0, 0.0, 0.0); // No refraction, returning a zero vector
-    }
-
-    double cos_theta_t = std::sqrt(1.0 - sin2_theta_t); // Angle of refraction
-    return eta * incident + (eta * cos_theta_i - cos_theta_t) * normal;
-}
-
-vector3 Scene::shade(
-    const ray& r, 
-    const vector3& hit_point, 
-    const vector3& normal, 
-    const Shape& hit_shape,
-    // const Material& material, 
-    int depth
-) const {
-    switch (render_mode) {
-        // TODO!!
-        case RenderMode::Binary:
-            return vector3(1.0, 0.0, 0.0); // red
-        case RenderMode::BlinnPhong:
-            return shade_blinn_phong(r, hit_point, normal, hit_shape, depth);
-        default:
-            throw std::runtime_error("Unsupported render mode.");
-    }
-}
-
-vector3 Scene::shade_blinn_phong(
-    const ray& r, 
-    const vector3& hit_point, 
-    const vector3& normal, 
-    const Shape& hit_shape,
-    // const Material& material,
-    int depth
-) const {
-    vector3 color(0.0, 0.0, 0.0); // Initialize the color
-    vector3 view_dir = -r.direction.unit(); // Direction to the viewer
-
-    vector3 diffuse_color = hit_shape.material.diffusecolor;
-
-    if (hit_shape.material.texture) {
-        auto [u, v] = hit_shape.get_uv(hit_point);  // Calculate UV coordinates
-        diffuse_color = hit_shape.material.texture->get_color_at_uv(u, v);  // Fetch texture color
-    }
-
-    for (const auto& light : lights) {
-        vector3 light_dir = (light.position - hit_point).unit(); // Direction to the light source
-        ray shadow_ray(hit_point + light_dir * 0.001, light_dir);
-
-        double t_hit;
-        std::shared_ptr<Shape> shadow_hit_shape;
-
-        if (intersects(shadow_ray, t_hit, shadow_hit_shape, (light.position - hit_point).length())) {
-            continue; // Skip this light if the shadow ray is blocked
-        }
-
-        // Diffuse component
-        double diffuse_intensity = std::max(0.0, normal.dot(light_dir));
-        vector3 diffuse = hit_shape.material.kd * diffuse_intensity * diffuse_color * light.intensity;
-
-        // Specular component (Blinn-Phong)
-        vector3 halfway_dir = (light_dir + view_dir).unit();
-        double spec_intensity = std::pow(std::max(0.0, normal.dot(halfway_dir)), hit_shape.material.specularexponent);
-        vector3 specular = hit_shape.material.ks * spec_intensity * hit_shape.material.specularcolor * light.intensity;
-
-        // Accumulate contributions
-        color += diffuse + specular;
-    }
-
-    // Reflection component
-    if (hit_shape.material.isreflective) {
-        vector3 reflection = compute_reflection(r, hit_point, normal, hit_shape.material, depth - 1);
-        color += reflection;
-
-    }
-
-    // Refraction component
-    if (hit_shape.material.isrefractive && depth > 0) {
-        double ior_in = 1.0; // Air's refractive index
-        double ior_out = hit_shape.material.refractiveindex;
-
-        // Determine the direction of the refracted ray
-        vector3 refracted_dir = compute_refracted_direction(view_dir, normal, ior_in, ior_out);
-
-        if (refracted_dir.length() > 0.0) { // No total internal reflection
-            ray refracted_ray(hit_point + refracted_dir * 0.001, refracted_dir);
-
-            double t_hit_refracted;
-            std::shared_ptr<Shape> hit_shape_refracted;
-            if (intersects(refracted_ray, t_hit_refracted, hit_shape_refracted, std::numeric_limits<double>::infinity())) {
-                vector3 hit_point_refracted = refracted_ray.origin + t_hit_refracted * refracted_ray.direction;
-                vector3 normal_refracted = hit_shape_refracted->get_normal(hit_point_refracted);
-                vector3 view_dir_refracted = -refracted_ray.direction.unit();
-
-                // Compute the refracted color
-                vector3 refracted_color = shade(
-                    refracted_ray, hit_point_refracted, normal_refracted, hit_shape, depth - 1
-                );
-
-                // Combine with existing color using transparency
-                color += hit_shape.material.transparency * refracted_color;
-            }
-        }
-    }
-
-    return color;
-}
-

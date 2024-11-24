@@ -12,9 +12,19 @@
 #include "cylinder.h"
 #include "libs/json.hpp"
 
+enum class LightType {
+    Point,
+    Area
+};
+
 struct Light {
-    vector3 position;
+    LightType type; // point or area
+    vector3 position; // centre of light source
     vector3 intensity;
+    vector3 u; // u-axis for area light
+    vector3 v; // v-axis for area light
+    double width;
+    double height;
 };
 
 enum class RenderMode {
@@ -31,6 +41,8 @@ public:
     std::shared_ptr<BVH> bvh;
     bool use_bvh = false;
     bool enable_antialiasing = false;
+
+    /* --------------- Scene parsing --------------- */
 
     RenderMode parse_render_mode(const std::string& mode_str) {
         if (mode_str == "binary") return RenderMode::Binary;
@@ -55,38 +67,7 @@ public:
         lights.push_back(light);
     }
 
-    // vector3 shade(const ray& r, const vector3& hit_point, const vector3& normal, const Shape& hit_shape, const Material& material, int depth) const;
-    vector3 shade(const ray& r, const vector3& hit_point, const vector3& normal, const Shape& hit_shape, int depth) const;
-    
-    vector3 shade_binary(const ray& r, const vector3& hit_point, const vector3& normal, const Shape& hit_shape, int depth) const;
-
-    // vector3 shade_blinn_phong(const ray& r, const vector3& hit_point, const vector3& normal, const Shape& hit_shape, const Material& material, int depth) const;
-    vector3 shade_blinn_phong(const ray& r, const vector3& hit_point, const vector3& normal, const Shape& hit_shape, int depth) const;
-
-    vector3 compute_blinn_phong(
-        const vector3& point,
-        const vector3& normal,
-        const vector3& view_dir,
-        const Material& material,
-        const Shape& shape
-    ) const;
-
-    vector3 compute_reflection(
-        const ray& r,
-        const vector3& hit_point,
-        const vector3& normal,
-        const Material& material,
-        int depth
-    ) const;
-
-    vector3 compute_refracted_direction(
-        const vector3& incident,
-        const vector3& normal,
-        double ior_in,
-        double ior_out
-    ) const;
-
-    // BVH
+    /* --------------- BVH & intersection --------------- */
     void build_bvh() {
         if (use_bvh) {
             bvh = std::make_shared<BVH>(shapes);
@@ -104,6 +85,71 @@ public:
     bool brute_force_intersects(const ray& r, double& t_hit, std::shared_ptr<Shape>& hit_shape, double max_t) const;
     // bool intersects(const ray& r, double& t_hit, std::shared_ptr<Shape>& hit_shape, double max_t) const;
 
+
+    /* --------------- Shading / reflection / refraction --------------- */
+
+    // KEEP?
+    // vector3 shade(const ray& r, const vector3& hit_point, const vector3& normal, const Shape& hit_shape, int depth) const;
+    
+    // ADD INTO NEW CPP!
+    // vector3 shade_binary(const ray& r, const vector3& hit_point, const vector3& normal, const Shape& hit_shape, int depth) const;
+
+    // KEEP?
+    // vector3 shade_blinn_phong(const ray& r, const vector3& hit_point, const vector3& normal, const Shape& hit_shape, int depth) const;
+
+    vector3 shade(
+        const ray& r, 
+        // const vector3& hit_point, 
+        // const vector3& normal, 
+        // const Shape& hit_shape,
+        // const Material& material, 
+        int depth
+    ) const;
+
+    vector3 compute_blinn_phong(
+        const vector3& point,
+        const vector3& normal,
+        const vector3& view_dir,
+        const Material& material,
+        const Shape& shape
+    ) const;
+
+    double compute_shadow_factor(const vector3& point, const Light& light) const;
+
+    vector3 compute_reflection(
+        const ray& r,
+        const vector3& hit_point,
+        const vector3& normal,
+        const Material& material,
+        int depth
+    ) const;
+
+    vector3 shade_surface(
+        const ray& r,
+        const vector3& hit_point,
+        const vector3& normal,
+        const Material& material,
+        const Shape& shape,
+        int depth
+    ) const;
+
+    vector3 shade_blinn_phong(const ray& r, int depth) const;
+
+    vector3 compute_refraction(
+        const ray& r_in,              // Incoming ray
+        const vector3& hit_point,     // Point of intersection
+        const vector3& normal,        // Surface normal
+        const Material& material,     // Material of the hit object
+        int depth                     // Recursion depth
+    ) const;
+
+    // KEPT IN NEW CPP
+    vector3 compute_refracted_direction(
+        const vector3& incident,
+        const vector3& normal,
+        double ior_in,
+        double ior_out
+    ) const;
 
 };
 
