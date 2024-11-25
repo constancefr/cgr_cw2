@@ -10,8 +10,7 @@
             "lookAt":[0.0, -0.1, 1.0],
             "upVector":[0.0, 1.0, 0.0],
             "fov":45.0,
-            "exposure":2.0,
-            "tone_mapping": "aces"
+            "exposure":2.0
         },
     "scene":
         { 
@@ -30,9 +29,9 @@
                     "radius":0.3, 
                     "material":
                         { 
-                            "ks":0.1, 
-                            "kd":0.9, 
-                            "specularexponent":20, 
+                            "ks":0.0, 
+                            "kd":1.0, 
+                            "specularexponent":1, 
                             "diffusecolor":[0.8, 0.5, 0.5],
                             "specularcolor":[1.0,1.0,1.0],
                             "isreflective":true,
@@ -81,7 +80,7 @@
                             "reflectivity":1.0,
                             "isrefractive":false,
                             "refractiveindex":1.0,
-                            "texture_file": "textures/grid.bmp"
+                            "texture_file": "textures/grey_checkerboard.bmp"
                         } 
                 },
                 { 
@@ -103,7 +102,7 @@
                             "reflectivity":1.0,
                             "isrefractive":false,
                             "refractiveindex":1.0,
-                            "texture_file": "textures/grid.bmp"
+                            "texture_file": "textures/grey_checkerboard.bmp"
                         } 
                 }  
             ] 

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <random>
+#include <omp.h>
 #include "json.hpp"
 #include "vector3.h"
 #include "colour.h"

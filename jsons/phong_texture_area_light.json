@@ -43,7 +43,7 @@
                             "reflectivity":0.5,
                             "isrefractive":false,
                             "refractiveindex":1.0,
-                            "texture_file": "textures/marble.jpg"
+                            "texture_file": "textures/marble.bmp"
                         }                    
                 },
                 {
@@ -63,7 +63,7 @@
                             "reflectivity":1,
                             "isrefractive":false,
                             "refractiveindex":1.0,
-                            "texture_file": "textures/cork.jpg"
+                            "texture_file": "textures/cork.bmp"
                         } 
                 },
                 { 
@@ -85,7 +85,7 @@
                             "reflectivity":1.0,
                             "isrefractive":false,
                             "refractiveindex":1.0,
-                            "texture_file": "textures/grid.jpg"
+                            "texture_file": "textures/grid.bmp"
                         } 
                 },
                 { 
@@ -107,7 +107,7 @@
                             "reflectivity":1.0,
                             "isrefractive":false,
                             "refractiveindex":1.0,
-                            "texture_file": "textures/grid.jpg"
+                            "texture_file": "textures/grid.bmp"
                         } 
                 }  
             ] 

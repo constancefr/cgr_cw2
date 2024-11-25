@@ -111,6 +111,8 @@ public:
         int nbounces
     ) const;
 
+    // vector3 random_in_hemisphere(const vector3& normal) const;
+
     vector3 shade_surface(
         const ray& r,
         const vector3& hit_point,

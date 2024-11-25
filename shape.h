@@ -12,7 +12,7 @@ struct AABB;
 
 struct Material {
     double kd, ks, reflectivity, refractiveindex;
-    double transparency = 0.4; // keep transparency?
+    double transparency = 0.5;
     double specularexponent;
     vector3 diffusecolor, specularcolor;
     bool isreflective, isrefractive;

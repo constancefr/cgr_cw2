@@ -131,7 +131,7 @@ vector3 Scene::shade(
     }
 }
 
-// shade_binary: simple binary shading
+// Only returns red or black
 vector3 Scene::shade_binary(const ray& r) const {
     double t_hit;
     std::shared_ptr<Shape> hit_shape;
@@ -141,11 +141,12 @@ vector3 Scene::shade_binary(const ray& r) const {
     return vector3(1.0, 0.0, 0.0); // red
 }
 
+// Checks if intersection occurs, calls Blinn-Phong shading function if it does
 vector3 Scene::shade_blinn_phong(const ray& r, int nbounces) const {
     double t_hit;
     std::shared_ptr<Shape> hit_shape;
     if (!intersects(r, t_hit, hit_shape, std::numeric_limits<double>::max())) {
-        return backgroundcolor; // No intersection, return background color
+        return backgroundcolor;
     }
 
     vector3 hit_point = r.origin + t_hit * r.direction;
@@ -153,6 +154,7 @@ vector3 Scene::shade_blinn_phong(const ray& r, int nbounces) const {
     return shade_surface(r, hit_point, normal, hit_shape->material, *hit_shape, nbounces);
 }
 
+// Computes the colour of the surface at the intersection point by combining local, reflection, and refraction colours
 vector3 Scene::shade_surface(
     const ray& r,
     const vector3& hit_point,
@@ -163,16 +165,11 @@ vector3 Scene::shade_surface(
 ) const {
     vector3 view_dir = -r.direction.unit();
 
-    // Local shading
     vector3 local_color = compute_blinn_phong(hit_point, normal, view_dir, material, shape);
 
-    // Reflection
-    // vector3 reflection_color = compute_reflection(r, hit_point, normal, material, nbounces);
     vector3 reflection_color = compute_reflection(r, hit_point, normal, material, nbounces - 1);
 
-    // Refraction (if implemented)
     vector3 refraction_color = material.isrefractive
-        // ? compute_refraction(r, hit_point, normal, material, nbounces)
         ? compute_refraction(r, hit_point, normal, material, nbounces - 1)
         : vector3(0.0, 0.0, 0.0);
 
@@ -180,6 +177,7 @@ vector3 Scene::shade_surface(
     return local_color + reflection_color + refraction_color;
 }
 
+// Uses light sources to compute the colour for a given point on the surface of a given shape
 vector3 Scene::compute_blinn_phong(
     const vector3& point,
     const vector3& normal,
@@ -210,7 +208,7 @@ vector3 Scene::compute_blinn_phong(
             color += shadow_factor * (diffuse + specular);
 
         } else if (light.type == LightType::Area) {
-            int num_samples = 16; // Adjust for quality vs. performance
+            int num_samples = 32;
             vector3 area_color(0.0, 0.0, 0.0);
 
             for (int i = 0; i < num_samples; ++i) {
@@ -239,6 +237,7 @@ vector3 Scene::compute_blinn_phong(
     return color;
 }
 
+// Checks if a point is in shadow by casting a shadow ray to the light source
 double Scene::compute_shadow_factor(const vector3& point, const vector3& light_position) const {
     vector3 light_dir = (light_position - point).unit();
     ray shadow_ray(point + light_dir * 0.001, light_dir); // Offset to avoid self-intersection
@@ -251,6 +250,7 @@ double Scene::compute_shadow_factor(const vector3& point, const vector3& light_p
     return 1.0; // Fully lit
 }
 
+// Computes the reflection colour by recursively shading the reflected ray
 vector3 Scene::compute_reflection(
     const ray& r,
     const vector3& hit_point,
@@ -266,6 +266,7 @@ vector3 Scene::compute_reflection(
     return shade_blinn_phong(reflect_ray, nbounces - 1) * material.reflectivity;
 }
 
+// Computes the refraction colour by recursively shading the refracted ray
 vector3 Scene::compute_refraction(
     const ray& r,
     const vector3& hit_point,
@@ -273,22 +274,26 @@ vector3 Scene::compute_refraction(
     const Material& material,
     int nbounces
 ) const {
+    if (nbounces <= 0) return vector3(0.0, 0.0, 0.0);
+
+    // Adjust normal if necessary
+    vector3 adjusted_normal = normal.dot(r.direction) < 0 ? normal : -normal;
+
     // Refraction indices
-    double eta = material.refractiveindex; // Refractive index of the material
+    double eta = material.refractiveindex; // Outside -> Inside
     double eta_inv = 1.0 / eta;
 
     // Compute the unit direction of the incident ray
     vector3 incident_dir = r.direction.unit();
 
     // Cosine of the angle between the incident ray and the surface normal
-    double cos_theta_i = -normal.dot(incident_dir);
+    double cos_theta_i = -adjusted_normal.dot(incident_dir);
 
     // Determine if the ray is entering or exiting the medium
-    vector3 refract_normal = normal;
     if (cos_theta_i < 0.0) {
         // Exiting the medium
         cos_theta_i = -cos_theta_i;
-        refract_normal = -normal;
+        adjusted_normal = -adjusted_normal;
         eta = eta_inv;
     }
 
@@ -296,23 +301,22 @@ vector3 Scene::compute_refraction(
     double sin2_theta_t = eta * eta * (1.0 - cos_theta_i * cos_theta_i);
 
     // Check for total internal reflection (TIR)
-    if (sin2_theta_t > 1.0) {
-        // TIR occurs; no refraction, return black color
-        return vector3(0.0, 0.0, 0.0);
+    if (sin2_theta_t > 1.0 + 1e-6) {
+        return vector3(0.0, 0.0, 0.0); // TIR
     }
 
     // Calculate the cosine of the refracted angle
     double cos_theta_t = sqrt(1.0 - sin2_theta_t);
 
     // Compute the refracted direction
-    vector3 refract_dir = eta * incident_dir + (eta * cos_theta_i - cos_theta_t) * refract_normal;
+    vector3 refract_dir = eta * incident_dir + (eta * cos_theta_i - cos_theta_t) * adjusted_normal;
     refract_dir = refract_dir.unit();
 
     // Generate the refracted ray
-    ray refracted_ray(hit_point + refract_dir * 1e-4, refract_dir); // Offset to avoid self-intersection
+    ray refracted_ray(hit_point + refract_dir * 0.1, refract_dir);
 
     // Calculate the refraction color by recursively shading the refracted ray
-    vector3 refraction_color = shade_blinn_phong(refracted_ray, nbounces + 1); // + 1 because we are entering a new medium??
+    vector3 refraction_color = shade_blinn_phong(refracted_ray, nbounces - 1);
 
     // Attenuate the refraction color by the material's transparency
     return refraction_color * material.transparency;
